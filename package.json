@@ -9,8 +9,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "migrate": "tsx src/db/migrate.ts",
-    "migrate:prod": "node dist/db/migrate.js",
-    "start:prod": "pnpm run migrate:prod && node dist/index.js",
+    "start:prod": "node dist/index.js",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

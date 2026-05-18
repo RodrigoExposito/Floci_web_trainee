@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 
 import { checkConnection } from "./db/pool.js";
+import { runMigration } from "./db/migrate.js";
 import { requestLogger } from "./middleware/request-logger.js";
 import { errorHandler } from "./middleware/error-handler.js";
 
@@ -32,7 +33,8 @@ app.use(errorHandler);
 
 // Boot
 async function start(): Promise<void> {
-  await checkConnection();
+  await checkConnection();   // retries up to 5x with 2s delay
+  await runMigration();      // idempotent — safe to run on every boot
   app.listen(PORT, () => {
     console.log(`Floci Trainer Web API running on port ${PORT}`);
   });
