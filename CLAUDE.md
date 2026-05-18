@@ -11,7 +11,7 @@ The desktop version (Tauri + Rust + SQLite) lives in `../floci-trainer`.
 - **Framework:** Express 4 + TypeScript (strict)
 - **Database:** PostgreSQL 16 via `pg` (node-postgres)
 - **Package manager:** pnpm
-- **Deploy target:** Railway (nixpacks build)
+- **Deploy target:** Railway (Dockerfile build — `railway.json` forces `DOCKERFILE` builder)
 
 ---
 
@@ -95,7 +95,7 @@ All responses follow `{ ok: true, data: ... }` or `{ ok: false, error: { code, m
 
 ## Phase Status
 
-- [x] **W1 — Backend Foundation:** Express + TypeScript, PostgreSQL schema, 8 REST endpoints, Docker Compose for local dev, Railway deploy config
+- [x] **W1 — Backend Foundation:** Express + TypeScript, PostgreSQL schema, 8 REST endpoints, Docker Compose for local dev, Railway deploy via Dockerfile (`railway.json` + `Dockerfile`)
 - [ ] **W2 — Content API:** Serve curriculum JSON + Markdown lesson content from static files
 - [ ] **W3 — Challenge Execution:** Run AWS CLI commands against Floci, return validation results
 - [ ] **W4 — AI Integration:** Proxy Groq API calls (hints, explanations, feedback)
