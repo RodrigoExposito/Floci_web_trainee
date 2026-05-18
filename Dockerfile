@@ -1,9 +1,9 @@
 FROM node:20-slim
 WORKDIR /app
 
-# Install AWS CLI v2 (self-contained binary, no Python needed)
+# Install AWS CLI v2 + python3
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl unzip ca-certificates \
+      curl unzip ca-certificates python3 \
     && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip \
     && unzip /tmp/awscliv2.zip -d /tmp \
     && /tmp/aws/install \

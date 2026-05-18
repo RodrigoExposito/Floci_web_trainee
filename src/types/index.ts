@@ -61,6 +61,18 @@ export interface CleanupResource {
   name: string;
 }
 
+export interface PythonValidation {
+  expect: string;   // "exit_code_0" | "stdout_contains:X" | "no_exception"
+  criterion: string;
+}
+
+export interface PythonRunResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+  timedOut: boolean;
+}
+
 export interface ApiError {
   ok: false;
   error: {

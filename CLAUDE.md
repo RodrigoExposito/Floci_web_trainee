@@ -30,13 +30,15 @@ src/
 │   ├── weak-areas.ts     # GET + POST /api/weak-areas
 │   ├── attempts.ts       # POST /api/attempts
 │   ├── floci.ts          # GET /api/floci/status, POST /api/floci/cleanup
-│   └── validate.ts       # POST /api/validate/aws, POST /api/validate/aws/single
+│   ├── validate.ts       # POST /api/validate/aws, POST /api/validate/aws/single
+│   └── validate-python.ts # POST /api/validate/python
 ├── db/
 │   ├── pool.ts           # pg.Pool singleton with retry; reads DATABASE_URL
 │   ├── schema.sql        # Reference only — schema is embedded in migrate.ts
 │   └── migrate.ts        # Idempotent migration; runMigration() exported
 ├── services/
-│   └── floci.ts          # checkFlociStatus, executeAwsCommand, evaluateExpect, cleanupResource
+│   ├── floci.ts          # checkFlociStatus, executeAwsCommand, evaluateExpect, cleanupResource
+│   └── python-runner.ts  # runPython(code) — spawns python3, timeout 15s SIGKILL, cleans tmp file
 └── types/
     └── index.ts          # Shared TS interfaces
 ```
@@ -107,6 +109,16 @@ All responses follow `{ ok: true, data: ... }` or `{ ok: false, error: { code, m
 **cleanup resource types:** `s3-bucket`, `sqs-queue`, `dynamodb-table`, `lambda-function`.
 **503** is returned on any validation/cleanup endpoint when Floci is not available.
 
+### W3 Endpoints
+
+| Method | Path                    | Body                                                                                 |
+|--------|-------------------------|--------------------------------------------------------------------------------------|
+| POST   | `/api/validate/python`  | `{ track_id, challenge_id, code, validations: [{expect, criterion}] }`              |
+
+**Python expect values:** `"exit_code_0"`, `"stdout_contains:X"` (case-insensitive), `"no_exception"` (checks for `Traceback` in stderr).
+**Response:** `{ results, allPassed, stdout, stderr, timedOut }`. Attempt auto-recorded in `challenge_attempts`.
+**Timeout:** 15s hard kill via SIGKILL. Code is written to a tmp file, executed with `python3`, tmp file deleted after.
+
 ---
 
 ## Environment Variables
@@ -133,6 +145,6 @@ All responses follow `{ ok: true, data: ... }` or `{ ok: false, error: { code, m
 
 - [x] **W1 — Backend Foundation:** Express + TypeScript, PostgreSQL schema, 8 REST endpoints, Docker Compose for local dev, Railway deploy via Dockerfile (`railway.json` + `Dockerfile`)
 - [x] **W2 — Floci + AWS Validation:** Floci service (Railway), executeAwsCommand, evaluateExpect, cleanupResource, `/api/floci/status`, `/api/floci/cleanup`, `/api/validate/aws`, `/api/validate/aws/single`, AWS CLI v2 in Dockerfile
-- [ ] **W3 — Python Challenge Execution:** Run Python scripts for Agentes track challenges
+- [x] **W3 — Python Challenge Execution:** `runPython()` service, `/api/validate/python`, attempt recording, timeout via SIGKILL, python3 in Dockerfile
 - [ ] **W4 — AI Integration:** Proxy Groq API calls (hints, explanations, feedback)
 - [ ] **W5 — Frontend:** React SPA served from the same Express app or Vite + CDN
