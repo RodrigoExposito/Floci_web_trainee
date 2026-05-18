@@ -12,6 +12,8 @@ import progressRouter from "./routes/progress.js";
 import settingsRouter from "./routes/settings.js";
 import weakAreasRouter from "./routes/weak-areas.js";
 import attemptsRouter from "./routes/attempts.js";
+import flociRouter from "./routes/floci.js";
+import validateRouter from "./routes/validate.js";
 
 const app = express();
 const PORT = process.env["PORT"] ?? 3000;
@@ -27,6 +29,8 @@ app.use("/api", progressRouter);
 app.use("/api", settingsRouter);
 app.use("/api", weakAreasRouter);
 app.use("/api", attemptsRouter);
+app.use("/api", flociRouter);
+app.use("/api", validateRouter);
 
 // Global error handler (must be last)
 app.use(errorHandler);

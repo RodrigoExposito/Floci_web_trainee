@@ -32,6 +32,35 @@ export interface WeakArea {
   miss_count: number;
 }
 
+export interface ValidationCommand {
+  cmd: string;
+  expect: string;
+  criterion: string;
+}
+
+export interface ValidationResult {
+  criterion: string;
+  passed: boolean;
+  actual_output: string;
+}
+
+export interface CommandResult {
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+}
+
+export type CleanupResourceType =
+  | "s3-bucket"
+  | "sqs-queue"
+  | "dynamodb-table"
+  | "lambda-function";
+
+export interface CleanupResource {
+  type: CleanupResourceType;
+  name: string;
+}
+
 export interface ApiError {
   ok: false;
   error: {

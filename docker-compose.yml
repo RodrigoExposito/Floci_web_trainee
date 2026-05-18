@@ -11,5 +11,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  floci:
+    image: hectorvent/floci:latest
+    restart: unless-stopped
+    environment:
+      DEFAULT_REGION: us-east-1
+      SERVICES: s3,sqs,lambda,dynamodb,events,kinesis,stepfunctions,cloudformation,cloudwatch,sns,iam,sts,kms,secretsmanager
+    ports:
+      - "4566:4566"
+
 volumes:
   postgres_data:
