@@ -8,8 +8,10 @@ import ChallengeView from "@/pages/ChallengeView";
 import ExamplesView from "@/pages/ExamplesView";
 import ExampleDetail from "@/pages/ExampleDetail";
 import Settings from "@/pages/Settings";
+import LoginPage from "@/pages/LoginPage";
 import { useThemeStore } from "@/stores/theme-store";
 import { useTrackStore } from "@/stores/track-store";
+import { useAuthStore } from "@/stores/auth-store";
 
 function TrackRedirect() {
   const { activeTrackId, initialized } = useTrackStore();
@@ -19,15 +21,24 @@ function TrackRedirect() {
 
 export default function App() {
   const { theme } = useThemeStore();
-  const { initialize } = useTrackStore();
+  const { initialize: initTrack } = useTrackStore();
+  const { isAuthenticated, initialize: initAuth } = useAuthStore();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
   }, [theme]);
 
   useEffect(() => {
-    void initialize();
-  }, [initialize]);
+    initAuth();
+  }, [initAuth]);
+
+  useEffect(() => {
+    if (isAuthenticated) void initTrack();
+  }, [isAuthenticated, initTrack]);
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
 
   return (
     <BrowserRouter>

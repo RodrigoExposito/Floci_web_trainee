@@ -1,15 +1,29 @@
 import type { ProgressRecord } from "@/lib/types";
+import { getToken } from "@/stores/auth-store";
 
 // In dev, Vite proxies /api to localhost:3000.
 // In prod, the Express server serves both the SPA and /api from the same origin.
 const BASE = "";
 
 async function call<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const token = getToken();
+  const headers: Record<string, string> = {};
+  if (body !== undefined) headers["Content-Type"] = "application/json";
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
   const res = await fetch(`${BASE}${path}`, {
     method,
-    headers: body !== undefined ? { "Content-Type": "application/json" } : undefined,
+    headers: Object.keys(headers).length ? headers : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
+
+  if (res.status === 401) {
+    // Token expired or invalid — clear session and reload to login screen
+    sessionStorage.removeItem("floci-access-token");
+    window.location.href = "/";
+    throw new Error("Session expired");
+  }
+
   const json = await res.json() as { ok: boolean; data?: T; error?: { code: string; message: string } };
   if (!json.ok) {
     throw new Error(json.error?.message ?? "API error");
@@ -163,7 +177,7 @@ export async function callAi(
   context: string,
   trackId: string
 ): Promise<string> {
-  const data = await call<{ response: string }>("POST", "/api/ai/hint", {
+  const data = await call<{ response: string }>("POST", "/api/ai/chat", {
     prompt,
     context,
     track_id: trackId,

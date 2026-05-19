@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getSetting, callAi } from "@/lib/api";
+import { callAi } from "@/lib/api";
 import { useTrackStore } from "@/stores/track-store";
 
 export type AiContextType = "dashboard" | "lesson" | "challenge";
@@ -20,7 +20,6 @@ interface AiStore {
   open: boolean;
   messages: AiMessage[];
   loading: boolean;
-  hasApiKey: boolean | null;
   contextType: AiContextType;
   context: string;
   challengeContext: ChallengeAiContext | null;
@@ -31,14 +30,15 @@ interface AiStore {
   setChallengeContext: (ctx: ChallengeAiContext | null) => void;
   clearMessages: () => void;
   sendMessage: (prompt: string) => Promise<void>;
-  checkApiKey: () => Promise<void>;
 }
 
 function formatError(err: string): string {
-  if (err.includes("NO_API_KEY"))
-    return "⚠️ No hay API key configurada. Andá a Settings para agregarla.";
-  if (err.includes("HTTP_ERROR"))
+  if (err.includes("RATE_LIMIT") || err.includes("RATE_LIMITED"))
+    return "⚠️ Límite de consultas alcanzado. Esperá unos minutos.";
+  if (err.includes("HTTP_ERROR") || err.includes("Error de conexión"))
     return "⚠️ Error de conexión. Verificá tu internet.";
+  if (err.includes("tardó demasiado") || err.includes("TIMEOUT"))
+    return "⚠️ La consulta tardó demasiado. Intentá de nuevo.";
   return `⚠️ ${err}`;
 }
 
@@ -46,20 +46,16 @@ export const useAiStore = create<AiStore>((set, get) => ({
   open: false,
   messages: [],
   loading: false,
-  hasApiKey: null,
   contextType: "dashboard",
   context: "El estudiante está en el dashboard.",
   challengeContext: null,
 
   toggle() {
-    const next = !get().open;
-    set({ open: next });
-    if (next && get().hasApiKey === null) void get().checkApiKey();
+    set((s) => ({ open: !s.open }));
   },
 
   setOpen(open) {
     set({ open });
-    if (open && get().hasApiKey === null) void get().checkApiKey();
   },
 
   setContext(type, context) {
@@ -74,15 +70,6 @@ export const useAiStore = create<AiStore>((set, get) => ({
 
   clearMessages() {
     set({ messages: [] });
-  },
-
-  async checkApiKey() {
-    try {
-      const val = await getSetting("groq_api_key");
-      set({ hasApiKey: !!val });
-    } catch {
-      set({ hasApiKey: false });
-    }
   },
 
   async sendMessage(prompt) {

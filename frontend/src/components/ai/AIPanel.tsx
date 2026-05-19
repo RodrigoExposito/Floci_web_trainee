@@ -1,17 +1,14 @@
 import { useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { X, Settings, ArrowUp } from "lucide-react";
+import { X, ArrowUp } from "lucide-react";
 import { useAiStore } from "@/stores/ai-store";
 import { AiMessages } from "./AiMessages";
 
 export function AIPanel() {
-  const navigate = useNavigate();
   const {
     open,
     setOpen,
     messages,
     loading,
-    hasApiKey,
     contextType,
     context,
     challengeContext,
@@ -117,140 +114,120 @@ export function AIPanel() {
         </p>
       </div>
 
-      {hasApiKey === false ? (
-        <div className="flex flex-col items-center justify-center flex-1 gap-4 p-6 text-center">
-          <Settings className="size-10" style={{ color: "var(--text-tertiary)" }} />
-          <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-            Para usar el asistente IA, configurá tu API key en Settings.
-          </p>
-          <button
-            onClick={() => {
-              navigate("/settings");
-              setOpen(false);
+      <AiMessages
+        messages={messages}
+        loading={loading}
+        contextType={contextType}
+        onChipClick={(p) => void sendMessage(p)}
+      />
+
+      {challengeChips && (
+        <div
+          style={{
+            padding: "6px 12px 0",
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+            flexShrink: 0,
+          }}
+        >
+          {challengeChips.map((chip) => (
+            <button
+              key={chip.label}
+              onClick={() => void sendMessage(chip.prompt)}
+              disabled={loading}
+              style={{
+                background: "none",
+                border: "1px solid var(--border-soft)",
+                borderRadius: 6,
+                padding: "5px 10px",
+                fontSize: 11.5,
+                color: "var(--text-secondary)",
+                cursor: "pointer",
+                transition: "background 0.12s, color 0.12s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "var(--bg-elevated)";
+                e.currentTarget.style.color = "var(--text-primary)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "none";
+                e.currentTarget.style.color = "var(--text-secondary)";
+              }}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <div
+        style={{
+          borderTop: "1px solid var(--border-soft)",
+          padding: "10px 12px",
+          flexShrink: 0,
+        }}
+      >
+        <div
+          style={{
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--border-soft)",
+            borderRadius: 10,
+            display: "flex",
+            alignItems: "flex-end",
+            gap: 6,
+            padding: "8px 10px",
+          }}
+        >
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={handleInput}
+            onKeyDown={handleKeyDown}
+            disabled={loading}
+            placeholder="Preguntá lo que quieras..."
+            rows={1}
+            style={{
+              flex: 1,
+              background: "none",
+              border: "none",
+              outline: "none",
+              resize: "none",
+              fontSize: 13,
+              color: "var(--text-primary)",
+              lineHeight: 1.5,
+              fontFamily: "var(--font-sans)",
             }}
-            className="btn btn-secondary btn-sm"
+          />
+          <button
+            onClick={() => void handleSend()}
+            disabled={!input.trim() || loading}
+            aria-label="Enviar"
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: "50%",
+              background: "var(--accent)",
+              border: "none",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              opacity: !input.trim() || loading ? 0.4 : 1,
+              transition: "opacity 0.15s",
+            }}
           >
-            Ir a Settings
+            <ArrowUp className="size-3.5" style={{ color: "var(--accent-fg)" }} />
           </button>
         </div>
-      ) : (
-        <>
-          <AiMessages
-            messages={messages}
-            loading={loading}
-            contextType={contextType}
-            onChipClick={(p) => void sendMessage(p)}
-          />
-
-          {challengeChips && (
-            <div
-              style={{
-                padding: "6px 12px 0",
-                display: "flex",
-                gap: 6,
-                flexWrap: "wrap",
-                flexShrink: 0,
-              }}
-            >
-              {challengeChips.map((chip) => (
-                <button
-                  key={chip.label}
-                  onClick={() => void sendMessage(chip.prompt)}
-                  disabled={loading}
-                  style={{
-                    background: "none",
-                    border: "1px solid var(--border-soft)",
-                    borderRadius: 6,
-                    padding: "5px 10px",
-                    fontSize: 11.5,
-                    color: "var(--text-secondary)",
-                    cursor: "pointer",
-                    transition: "background 0.12s, color 0.12s",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "var(--bg-elevated)";
-                    e.currentTarget.style.color = "var(--text-primary)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = "none";
-                    e.currentTarget.style.color = "var(--text-secondary)";
-                  }}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div
-            style={{
-              borderTop: "1px solid var(--border-soft)",
-              padding: "10px 12px",
-              flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                background: "var(--bg-elevated)",
-                border: "1px solid var(--border-soft)",
-                borderRadius: 10,
-                display: "flex",
-                alignItems: "flex-end",
-                gap: 6,
-                padding: "8px 10px",
-              }}
-            >
-              <textarea
-                ref={textareaRef}
-                value={input}
-                onChange={handleInput}
-                onKeyDown={handleKeyDown}
-                disabled={loading}
-                placeholder="Preguntá lo que quieras..."
-                rows={1}
-                style={{
-                  flex: 1,
-                  background: "none",
-                  border: "none",
-                  outline: "none",
-                  resize: "none",
-                  fontSize: 13,
-                  color: "var(--text-primary)",
-                  lineHeight: 1.5,
-                  fontFamily: "var(--font-sans)",
-                }}
-              />
-              <button
-                onClick={() => void handleSend()}
-                disabled={!input.trim() || loading}
-                aria-label="Enviar"
-                style={{
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  background: "var(--accent)",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0,
-                  opacity: !input.trim() || loading ? 0.4 : 1,
-                  transition: "opacity 0.15s",
-                }}
-              >
-                <ArrowUp className="size-3.5" style={{ color: "var(--accent-fg)" }} />
-              </button>
-            </div>
-            <p
-              className="font-mono text-center mt-1.5"
-              style={{ fontSize: 10.5, color: "var(--text-tertiary)" }}
-            >
-              enter enviar · shift+enter salto de línea
-            </p>
-          </div>
-        </>
-      )}
+        <p
+          className="font-mono text-center mt-1.5"
+          style={{ fontSize: 10.5, color: "var(--text-tertiary)" }}
+        >
+          enter enviar · shift+enter salto de línea
+        </p>
+      </div>
     </div>
   );
 }
