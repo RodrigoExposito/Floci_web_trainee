@@ -1,0 +1,30 @@
+[
+  {
+    "id": "ag-01",
+    "title": "Agente con loop de razonamiento completo",
+    "description": "Implementá el patrón ReAct: Razonar → Actuar → Observar en un bucle controlado",
+    "category": "Fundamentos",
+    "difficulty": 2
+  },
+  {
+    "id": "ag-02",
+    "title": "Memoria conversacional persistente",
+    "description": "Agente que recuerda el contexto de la conversación y lo resume cuando crece",
+    "category": "Memoria",
+    "difficulty": 2
+  },
+  {
+    "id": "ag-03",
+    "title": "Agente con múltiples herramientas",
+    "description": "Registro de tools dinámico, despacho por nombre y manejo de errores por tool",
+    "category": "Tools",
+    "difficulty": 2
+  },
+  {
+    "id": "ag-04",
+    "title": "Mini-RAG: indexar y responder con contexto",
+    "description": "Pipeline completo de indexación y recuperación semántica con Python stdlib",
+    "category": "RAG",
+    "difficulty": 3
+  }
+]

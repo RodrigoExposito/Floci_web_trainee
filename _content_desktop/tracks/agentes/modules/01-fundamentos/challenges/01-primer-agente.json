@@ -1,0 +1,27 @@
+{
+  "id": "01-01",
+  "title": "Tu primer agente IA",
+  "difficulty": 1,
+  "challengeType": "python",
+  "starterCode": "# Implementá la clase AgentBasico\n# El método actuar(entrada) debe retornar una respuesta\n# que incluya la palabra \"agente\" en el output impreso.\n\nclass AgentBasico:\n    def __init__(self, nombre):\n        self.nombre = nombre\n\n    def actuar(self, entrada):\n        # TODO: implementá este método.\n        # Debe imprimir una respuesta que contenga la palabra \"agente\".\n        pass\n\n\n# Prueba tu agente\nmi_agente = AgentBasico(\"Floci\")\nmi_agente.actuar(\"Hola, ¿qué podés hacer?\")\n",
+  "objective": "Implementar un agente básico que responde a entradas del usuario",
+  "scenario": "En el mundo de los agentes, todo empieza por encapsular el comportamiento en una clase reutilizable. Tu primer agente debe poder recibir una entrada, procesarla y comunicar que es un agente activo.",
+  "instructions": [
+    "Completá el método actuar() en la clase AgentBasico",
+    "El método debe imprimir una respuesta que contenga la palabra 'agente'",
+    "Ejecutá el código para verificar la salida"
+  ],
+  "hints": [
+    "Usá print() dentro del método actuar() para mostrar la respuesta",
+    "La respuesta puede ser algo como: f'Soy un agente llamado {self.nombre}...'",
+    "No necesitás retornar nada — solo imprimir"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "expect": "stdout_contains:agente",
+        "criterion": "La salida contiene la palabra 'agente'"
+      }
+    ]
+  }
+}

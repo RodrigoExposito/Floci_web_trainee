@@ -1,0 +1,8 @@
+{
+  "id": "03-herramientas",
+  "title": "Herramientas y Tool Calling",
+  "description": "Cómo los agentes usan herramientas externas para actuar",
+  "prereqs": ["02-memoria"],
+  "lessons": ["01-tool-calling", "02-integracion-tools"],
+  "challenges": ["01-agente-con-tool"]
+}

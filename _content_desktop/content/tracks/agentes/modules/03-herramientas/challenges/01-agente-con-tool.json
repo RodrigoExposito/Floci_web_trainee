@@ -1,0 +1,32 @@
+{
+  "id": "03-01",
+  "title": "Agente con herramienta matemática",
+  "difficulty": 2,
+  "challengeType": "python",
+  "starterCode": "# Implementá un agente que ejecuta herramientas registradas.\n# El método ejecutar_tool(nombre, **kwargs) debe:\n#   1. Buscar la tool en self.tools por nombre\n#   2. Llamarla con los kwargs recibidos\n#   3. Imprimir el resultado con el formato: \"RESULTADO: N\"\n\ndef tool_sumar(a, b):\n    return a + b\n\n\nclass AgenteConTools:\n    def __init__(self):\n        self.tools = {\n            \"sumar\": tool_sumar,\n        }\n\n    def ejecutar_tool(self, nombre, **kwargs):\n        # TODO: ejecutá la tool y mostrá \"RESULTADO: N\"\n        pass\n\n\n# Tests — no modifiques estas líneas\nagente = AgenteConTools()\nagente.ejecutar_tool(\"sumar\", a=10, b=5)   # debe imprimir RESULTADO: 15\nagente.ejecutar_tool(\"sumar\", a=33, b=9)   # debe imprimir RESULTADO: 42\n",
+  "objective": "Implementar el sistema de despacho de herramientas de un agente",
+  "scenario": "El corazón de un agente con tools es el mecanismo de despacho: recibe el nombre de una herramienta y sus argumentos, la ejecuta, y presenta el resultado. Esta es la pieza que conecta el razonamiento del LLM con las acciones reales.",
+  "instructions": [
+    "Implementá ejecutar_tool() para que busque la función en self.tools por nombre",
+    "Llamá la función con los kwargs recibidos: self.tools[nombre](**kwargs)",
+    "Imprimí el resultado con el formato exacto: 'RESULTADO: N'"
+  ],
+  "hints": [
+    "Usá self.tools[nombre] para obtener la función",
+    "Llamá la función con **kwargs para pasar los argumentos",
+    "Guardá el resultado en una variable: resultado = self.tools[nombre](**kwargs)",
+    "Luego imprimí: print(f\"RESULTADO: {resultado}\")"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "expect": "stdout_contains:RESULTADO: 15",
+        "criterion": "sumar(10, 5) imprime RESULTADO: 15"
+      },
+      {
+        "expect": "stdout_contains:RESULTADO: 42",
+        "criterion": "sumar(33, 9) imprime RESULTADO: 42"
+      }
+    ]
+  }
+}

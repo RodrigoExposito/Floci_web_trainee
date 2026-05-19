@@ -1,0 +1,85 @@
+{
+  "id": "aws-02",
+  "title": "SQS con Dead Letter Queue para reintentos",
+  "category": "Mensajería",
+  "difficulty": 2,
+  "description": "Implementá una cola de mensajes con reintentos automáticos y manejo de fallos",
+  "context": "En Nave procesamos notificaciones de pago que deben llegar sí o sí al sistema contable. Si el procesamiento falla por un error transitorio (red, DB temporalmente lenta), SQS reintenta automáticamente. Después de 3 intentos fallidos, el mensaje cae en la Dead Letter Queue para investigación manual.",
+  "updatedAt": "2026",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "## Patrón DLQ: qué problema resuelve\n\nSin DLQ, un mensaje que no puede procesarse se reintenta infinitamente o se pierde. Con DLQ:\n\n- La cola principal reintenta N veces (`maxReceiveCount`).\n- Si sigue fallando, SQS mueve el mensaje a la DLQ automáticamente.\n- Podés alertar sobre la DLQ con CloudWatch y revisar los mensajes sin perderlos.\n- Los mensajes en la DLQ se pueden reenviar a la cola principal una vez corregido el bug."
+    },
+    {
+      "type": "text",
+      "content": "## Paso 1: Crear la Dead Letter Queue"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "La DLQ se crea primero — necesitamos su ARN",
+      "content": "# Crear la DLQ\naws sqs create-queue \\\n  --queue-name nave-payments-dlq \\\n  --endpoint-url http://localhost:4566\n\n# Obtener el ARN de la DLQ\nDLQ_ARN=$(aws sqs get-queue-attributes \\\n  --queue-url http://localhost:4566/000000000000/nave-payments-dlq \\\n  --attribute-names QueueArn \\\n  --query 'Attributes.QueueArn' \\\n  --output text \\\n  --endpoint-url http://localhost:4566)\n\necho \"DLQ ARN: $DLQ_ARN\""
+    },
+    {
+      "type": "result",
+      "content": "DLQ ARN: arn:aws:sqs:us-east-1:000000000000:nave-payments-dlq"
+    },
+    {
+      "type": "text",
+      "content": "## Paso 2: Crear la cola principal con redrive policy"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Cola principal: 3 intentos antes de mover a DLQ",
+      "content": "aws sqs create-queue \\\n  --queue-name nave-payments \\\n  --attributes \"$(cat << 'EOF'\n{\n  \"VisibilityTimeout\": \"30\",\n  \"MessageRetentionPeriod\": \"86400\",\n  \"RedrivePolicy\": \"{\\\"deadLetterTargetArn\\\":\\\"arn:aws:sqs:us-east-1:000000000000:nave-payments-dlq\\\",\\\"maxReceiveCount\\\":\\\"3\\\"}\"\n}\nEOF\n)\" \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "note",
+      "content": "**VisibilityTimeout**: mientras Lambda procesa un mensaje, SQS lo oculta por 30s. Si Lambda no borra el mensaje en ese tiempo (procesamiento exitoso), SQS asume que falló y lo vuelve visible para otro intento. Debe ser mayor que el timeout de tu Lambda."
+    },
+    {
+      "type": "text",
+      "content": "## Paso 3: Enviar mensajes de prueba"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Simular notificaciones de pago entrantes",
+      "content": "# Enviar 3 mensajes\nfor i in 1 2 3; do\n  aws sqs send-message \\\n    --queue-url http://localhost:4566/000000000000/nave-payments \\\n    --message-body \"$(cat << EOF\n{\"payment_id\": \"PAY-$(date +%s)-$i\", \"amount\": $((RANDOM % 10000 + 100)), \"merchant\": \"NAVE-001\", \"status\": \"pending\"}\nEOF\n)\" \\\n    --endpoint-url http://localhost:4566\ndone\n\n# Verificar mensajes en cola\naws sqs get-queue-attributes \\\n  --queue-url http://localhost:4566/000000000000/nave-payments \\\n  --attribute-names ApproximateNumberOfMessages \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "result",
+      "content": "{\n  \"Attributes\": {\n    \"ApproximateNumberOfMessages\": \"3\"\n  }\n}"
+    },
+    {
+      "type": "text",
+      "content": "## Paso 4: Consumer — procesador de pagos"
+    },
+    {
+      "type": "code",
+      "language": "python",
+      "caption": "payment_processor.py — consumer con manejo correcto de errores",
+      "content": "import boto3\nimport json\nimport logging\n\nlogger = logging.getLogger(__name__)\n\nsqs = boto3.client('sqs', endpoint_url='http://localhost:4566', region_name='us-east-1')\nQUEUE_URL = 'http://localhost:4566/000000000000/nave-payments'\n\n\ndef process_payment(payment: dict) -> None:\n    \"\"\"Lógica de negocio: registrar pago en sistema contable.\"\"\"\n    # Simular error para payment_id que termina en '2'\n    if payment['payment_id'].endswith('-2'):\n        raise ValueError(f\"Sistema contable no disponible para {payment['payment_id']}\")\n    logger.info(f\"Pago procesado: {payment['payment_id']} por ${payment['amount']}\")\n\n\ndef poll_once():\n    response = sqs.receive_message(\n        QueueUrl=QUEUE_URL,\n        MaxNumberOfMessages=10,\n        WaitTimeSeconds=5,  # long polling: más eficiente, menos requests\n    )\n\n    messages = response.get('Messages', [])\n    for msg in messages:\n        try:\n            payment = json.loads(msg['Body'])\n            process_payment(payment)\n            # Solo borramos si el procesamiento fue exitoso\n            sqs.delete_message(\n                QueueUrl=QUEUE_URL,\n                ReceiptHandle=msg['ReceiptHandle'],\n            )\n        except Exception as e:\n            # NO borramos el mensaje — SQS lo reintenta\n            # Después de maxReceiveCount intentos, va a la DLQ\n            logger.error(f\"Error procesando mensaje: {e}. ApproximateReceiveCount: \"\n                        f\"{msg['Attributes'].get('ApproximateReceiveCount', '?')}\")\n\n\nif __name__ == '__main__':\n    logging.basicConfig(level=logging.INFO)\n    print(\"Consumer iniciado. Ctrl+C para detener.\")\n    while True:\n        poll_once()"
+    },
+    {
+      "type": "text",
+      "content": "## Paso 5: Inspeccionar la DLQ"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Verificar mensajes que llegaron a la DLQ tras 3 fallos",
+      "content": "# Ver cuántos mensajes hay en la DLQ\naws sqs get-queue-attributes \\\n  --queue-url http://localhost:4566/000000000000/nave-payments-dlq \\\n  --attribute-names ApproximateNumberOfMessages \\\n  --endpoint-url http://localhost:4566\n\n# Leer el mensaje fallido sin borrarlo (para investigación)\naws sqs receive-message \\\n  --queue-url http://localhost:4566/000000000000/nave-payments-dlq \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "result",
+      "content": "{\n  \"Messages\": [{\n    \"MessageId\": \"abc-123\",\n    \"Body\": \"{\\\"payment_id\\\": \\\"PAY-1736956800-2\\\", \\\"amount\\\": 4523, \\\"merchant\\\": \\\"NAVE-001\\\", \\\"status\\\": \\\"pending\\\"}\",\n    \"Attributes\": {\n      \"ApproximateReceiveCount\": \"3\",\n      \"ApproximateFirstReceiveTimestamp\": \"1736956802000\"\n    }\n  }]\n}"
+    },
+    {
+      "type": "note",
+      "content": "**Reenvío desde DLQ**: una vez corregido el bug, usá `sqs start-message-move-task` (AWS SDK v2) para mover los mensajes de la DLQ de vuelta a la cola principal. Disponible desde 2023. En Floci usá `send-message` manualmente para simular."
+    }
+  ]
+}

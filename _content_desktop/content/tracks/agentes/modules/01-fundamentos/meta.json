@@ -1,0 +1,8 @@
+{
+  "id": "01-fundamentos",
+  "title": "Fundamentos de Agentes IA",
+  "description": "Qué es un agente, cómo decide y cuándo usarlos",
+  "prereqs": [],
+  "lessons": ["01-que-es-agente", "02-anatomia-agente"],
+  "challenges": ["01-primer-agente", "02-agente-decision"]
+}

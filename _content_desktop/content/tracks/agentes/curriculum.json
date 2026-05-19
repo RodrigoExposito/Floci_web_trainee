@@ -1,0 +1,36 @@
+{
+  "modules": [
+    {
+      "id": "01-fundamentos",
+      "title": "Fundamentos de Agentes IA",
+      "description": "Qué es un agente, cómo decide y cuándo usarlos",
+      "serviceTag": "Agentes",
+      "prereqs": [],
+      "order": 1
+    },
+    {
+      "id": "02-memoria",
+      "title": "Memoria y Estado",
+      "description": "Tipos de memoria, conversaciones y búsqueda semántica",
+      "serviceTag": "Memoria",
+      "prereqs": ["01-fundamentos"],
+      "order": 2
+    },
+    {
+      "id": "03-herramientas",
+      "title": "Herramientas y Tool Calling",
+      "description": "Cómo los agentes usan herramientas externas para actuar",
+      "serviceTag": "Tools",
+      "prereqs": ["02-memoria"],
+      "order": 3
+    },
+    {
+      "id": "04-rag",
+      "title": "RAG y Bases de Conocimiento",
+      "description": "Recuperación de información y generación aumentada",
+      "serviceTag": "RAG",
+      "prereqs": ["03-herramientas"],
+      "order": 4
+    }
+  ]
+}

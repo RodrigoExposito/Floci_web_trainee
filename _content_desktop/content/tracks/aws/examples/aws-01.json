@@ -1,0 +1,77 @@
+{
+  "id": "aws-01",
+  "title": "Pipeline S3 → Lambda → DynamoDB",
+  "category": "Integración",
+  "difficulty": 2,
+  "description": "Procesá archivos subidos a S3 con Lambda y persistí los resultados en DynamoDB",
+  "context": "En Nave, cada vez que un comercio sube un archivo de transacciones a S3, necesitamos procesarlo automáticamente: parsear el CSV, calcular totales y guardar un resumen en DynamoDB para consulta rápida. Este pipeline event-driven elimina polling y escala a cero cuando no hay archivos.",
+  "updatedAt": "2026",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "## Arquitectura del pipeline\n\nEl flujo es completamente event-driven:\n\n1. El comercio sube `transacciones_20260115.csv` a un bucket S3.\n2. S3 emite un evento `s3:ObjectCreated:*` que invoca la Lambda automáticamente.\n3. La Lambda descarga el archivo, lo parsea y escribe el resumen en DynamoDB.\n4. El proceso completo tarda menos de 2 segundos para archivos de hasta 50.000 filas.\n\nNo hay servidor corriendo entre subidas — pagás solo por el procesamiento real."
+    },
+    {
+      "type": "text",
+      "content": "## Paso 1: Crear el bucket S3"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Crear bucket y habilitar notificaciones",
+      "content": "# Crear el bucket de transacciones\naws s3api create-bucket \\\n  --bucket nave-transactions \\\n  --endpoint-url http://localhost:4566\n\n# Verificar que existe\naws s3api head-bucket \\\n  --bucket nave-transactions \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "result",
+      "content": "Bucket creado. head-bucket retorna HTTP 200 sin body cuando existe."
+    },
+    {
+      "type": "text",
+      "content": "## Paso 2: Crear la tabla DynamoDB"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Tabla para guardar resúmenes procesados",
+      "content": "aws dynamodb create-table \\\n  --table-name TransactionSummaries \\\n  --attribute-definitions \\\n    AttributeName=merchant_id,AttributeType=S \\\n    AttributeName=date,AttributeType=S \\\n  --key-schema \\\n    AttributeName=merchant_id,KeyType=HASH \\\n    AttributeName=date,KeyType=RANGE \\\n  --billing-mode PAY_PER_REQUEST \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "text",
+      "content": "## Paso 3: El código de la Lambda"
+    },
+    {
+      "type": "code",
+      "language": "python",
+      "caption": "lambda_function.py — descarga, parsea y guarda en DynamoDB",
+      "content": "import boto3\nimport csv\nimport io\nimport json\nfrom decimal import Decimal\nfrom datetime import datetime\n\ns3 = boto3.client('s3', endpoint_url='http://localhost:4566')\ndynamodb = boto3.resource('dynamodb', endpoint_url='http://localhost:4566')\ntable = dynamodb.Table('TransactionSummaries')\n\n\ndef handler(event, context):\n    # Extraer bucket y clave del evento S3\n    record = event['Records'][0]\n    bucket = record['s3']['bucket']['name']\n    key = record['s3']['object']['key']\n\n    # Descargar el archivo CSV\n    response = s3.get_object(Bucket=bucket, Key=key)\n    content = response['Body'].read().decode('utf-8')\n\n    # Parsear CSV y calcular totales\n    reader = csv.DictReader(io.StringIO(content))\n    total_amount = Decimal('0')\n    transaction_count = 0\n    merchant_id = None\n\n    for row in reader:\n        total_amount += Decimal(row['amount'])\n        transaction_count += 1\n        if not merchant_id:\n            merchant_id = row['merchant_id']\n\n    # Extraer fecha del nombre del archivo: transacciones_20260115.csv\n    date_str = key.split('_')[1].split('.')[0]  # '20260115'\n    date = f\"{date_str[:4]}-{date_str[4:6]}-{date_str[6:]}\"\n\n    # Guardar resumen en DynamoDB\n    table.put_item(Item={\n        'merchant_id': merchant_id,\n        'date': date,\n        'total_amount': total_amount,\n        'transaction_count': transaction_count,\n        'source_file': key,\n        'processed_at': datetime.utcnow().isoformat(),\n    })\n\n    print(f\"Procesado: {transaction_count} transacciones, total ${total_amount}\")\n    return {'statusCode': 200, 'body': json.dumps({'processed': transaction_count})}"
+    },
+    {
+      "type": "text",
+      "content": "## Paso 4: Deployar la Lambda y conectarla a S3"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Empaquetar y crear la función Lambda",
+      "content": "# Empaquetar la Lambda\nzip function.zip lambda_function.py\n\n# Crear la función\naws lambda create-function \\\n  --function-name process-transactions \\\n  --runtime python3.12 \\\n  --handler lambda_function.handler \\\n  --zip-file fileb://function.zip \\\n  --role arn:aws:iam::000000000000:role/lambda-role \\\n  --endpoint-url http://localhost:4566\n\n# Configurar trigger S3\naws s3api put-bucket-notification-configuration \\\n  --bucket nave-transactions \\\n  --notification-configuration '{\n    \"LambdaFunctionConfigurations\": [{\n      \"LambdaFunctionArn\": \"arn:aws:lambda:us-east-1:000000000000:function:process-transactions\",\n      \"Events\": [\"s3:ObjectCreated:*\"]\n    }]\n  }' \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "text",
+      "content": "## Paso 5: Probar el pipeline end-to-end"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Subir un CSV de prueba y verificar el resultado en DynamoDB",
+      "content": "# Crear CSV de prueba\ncat > /tmp/transacciones_20260115.csv << 'EOF'\nmerchant_id,amount,description\nNAVE-001,150.50,Compra supermercado\nNAVE-001,89.99,Nafta\nNAVE-001,220.00,Restaurante\nEOF\n\n# Subir al bucket (dispara Lambda automáticamente)\naws s3 cp /tmp/transacciones_20260115.csv \\\n  s3://nave-transactions/ \\\n  --endpoint-url http://localhost:4566\n\n# Esperar 2s y consultar DynamoDB\nsleep 2\naws dynamodb get-item \\\n  --table-name TransactionSummaries \\\n  --key '{\"merchant_id\": {\"S\": \"NAVE-001\"}, \"date\": {\"S\": \"2026-01-15\"}}' \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "result",
+      "content": "{\n  \"Item\": {\n    \"merchant_id\": {\"S\": \"NAVE-001\"},\n    \"date\": {\"S\": \"2026-01-15\"},\n    \"total_amount\": {\"N\": \"460.49\"},\n    \"transaction_count\": {\"N\": \"3\"},\n    \"source_file\": {\"S\": \"transacciones_20260115.csv\"},\n    \"processed_at\": {\"S\": \"2026-01-15T14:23:11.445Z\"}\n  }\n}"
+    },
+    {
+      "type": "note",
+      "content": "**Producción**: usá Lambda Layers para boto3 actualizado y agrega un Dead Letter Queue (DLQ) para reintentos si el procesamiento falla. El timeout por defecto de Lambda (3s) puede ser insuficiente para CSVs grandes — ajustá a 30s o más."
+    }
+  ]
+}

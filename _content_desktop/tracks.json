@@ -1,0 +1,16 @@
+[
+  {
+    "id": "aws",
+    "title": "AWS Trainee",
+    "description": "Aprendé AWS con práctica real contra Floci",
+    "icon": "Cloud",
+    "accent": "green"
+  },
+  {
+    "id": "agentes",
+    "title": "Agente Trainee",
+    "description": "Construí agentes de IA de nivel producción",
+    "icon": "Bot",
+    "accent": "purple"
+  }
+]

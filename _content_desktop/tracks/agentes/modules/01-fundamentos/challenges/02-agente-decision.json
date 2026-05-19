@@ -1,0 +1,35 @@
+{
+  "id": "01-02",
+  "title": "Agente con lógica de decisión",
+  "difficulty": 1,
+  "challengeType": "python",
+  "starterCode": "# Implementá un agente que clasifica incidentes por severidad.\n# Reglas:\n#   severidad >= 8  → imprimir \"ESCALAR\"\n#   severidad 5-7   → imprimir \"INFORMAR\"\n#   severidad < 5   → imprimir \"DERIVAR\"\n\ndef decidir(severidad):\n    # TODO: implementá la lógica de decisión\n    pass\n\n\n# Tests — no modifiques estas líneas\ndecidir(9)  # debe imprimir ESCALAR\ndecidir(6)  # debe imprimir INFORMAR\ndecidir(2)  # debe imprimir DERIVAR\n",
+  "objective": "Implementar lógica de decisión basada en reglas de negocio",
+  "scenario": "Un agente de soporte técnico necesita clasificar incidentes automáticamente. Según la severidad del incidente, el agente decide si escalarlo, informar al equipo o derivarlo al área correspondiente.",
+  "instructions": [
+    "Implementá la función decidir() con la lógica de severidad",
+    "Usá print() para mostrar la decisión: ESCALAR, INFORMAR o DERIVAR",
+    "Verificá que los tres casos de prueba producen la salida correcta"
+  ],
+  "hints": [
+    "Usá if/elif/else para las tres condiciones",
+    "severidad >= 8 es la condición crítica",
+    "El rango 5-7 es la condición intermedia (elif severidad >= 5)"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "expect": "stdout_contains:ESCALAR",
+        "criterion": "Severidad alta → ESCALAR"
+      },
+      {
+        "expect": "stdout_contains:INFORMAR",
+        "criterion": "Severidad media → INFORMAR"
+      },
+      {
+        "expect": "stdout_contains:DERIVAR",
+        "criterion": "Severidad baja → DERIVAR"
+      }
+    ]
+  }
+}

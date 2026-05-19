@@ -1,0 +1,31 @@
+{
+  "id": "02-01",
+  "title": "Memoria conversacional",
+  "difficulty": 1,
+  "challengeType": "python",
+  "starterCode": "# Implementá un sistema de memoria conversacional.\n# La clase Memoria debe:\n#   - Almacenar mensajes con su rol (\"usuario\" o \"asistente\")\n#   - El método stats() debe imprimir exactamente:\n#       Total mensajes: N\n#       Mensajes de usuario: M\n\nclass Memoria:\n    def __init__(self):\n        self.mensajes = []\n\n    def agregar(self, rol, contenido):\n        # TODO: guardá el mensaje como dict {\"rol\": rol, \"contenido\": contenido}\n        pass\n\n    def stats(self):\n        # TODO: imprimí las estadísticas con el formato exacto indicado\n        pass\n\n\n# Tests — no modifiques estas líneas\nmem = Memoria()\nmem.agregar(\"usuario\", \"Hola\")\nmem.agregar(\"asistente\", \"¡Hola! ¿Cómo puedo ayudarte?\")\nmem.agregar(\"usuario\", \"¿Qué es un agente?\")\nmem.stats()\n",
+  "objective": "Implementar una memoria conversacional que registra y analiza el historial de mensajes",
+  "scenario": "Todo agente de producción necesita rastrear el historial de la conversación. Una memoria bien implementada permite calcular estadísticas, comprimir el contexto cuando es necesario y depurar el comportamiento del agente.",
+  "instructions": [
+    "Implementá agregar() para guardar cada mensaje como un diccionario",
+    "Implementá stats() que imprime el total de mensajes y los mensajes de rol 'usuario'",
+    "Asegurate de que el formato de salida sea exactamente: 'Total mensajes: N' y 'Mensajes de usuario: M'"
+  ],
+  "hints": [
+    "En agregar(), usá self.mensajes.append({\"rol\": rol, \"contenido\": contenido})",
+    "En stats(), usá len(self.mensajes) para el total",
+    "Para contar usuarios: sum(1 for m in self.mensajes if m[\"rol\"] == \"usuario\")"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "expect": "stdout_contains:Total mensajes: 3",
+        "criterion": "stats() reporta el total correcto (3 mensajes)"
+      },
+      {
+        "expect": "stdout_contains:Mensajes de usuario: 2",
+        "criterion": "stats() reporta los mensajes de usuario (2)"
+      }
+    ]
+  }
+}

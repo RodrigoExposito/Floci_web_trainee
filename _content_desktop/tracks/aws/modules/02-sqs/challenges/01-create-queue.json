@@ -1,0 +1,34 @@
+{
+  "id": "02-01",
+  "title": "Creá una cola y procesá tu primera transacción",
+  "difficulty": 1,
+  "objective": "Crear una cola SQS, enviar un mensaje de transacción y recibirlo",
+  "scenario": "El equipo de Nave necesita una cola para desacoplar el servicio de ingesta de transacciones del motor de fraude. Creá la cola, simulá la llegada de una transacción y confirmá que el mensaje fue recibido y procesado correctamente.",
+  "instructions": [
+    "Creá una cola SQS estándar llamada 'nave-fraud-queue'",
+    "Enviá un mensaje JSON representando una transacción: {\"transaction_id\":\"txn-001\",\"amount\":5000,\"currency\":\"ARS\",\"user_id\":\"usr-42\"}",
+    "Recibí el mensaje de la cola con long polling (--wait-time-seconds 5)",
+    "Eliminá el mensaje de la cola usando el ReceiptHandle recibido",
+    "Verificá que la cola está vacía"
+  ],
+  "hints": [
+    "Crear cola: aws sqs create-queue --queue-name nave-fraud-queue --endpoint-url http://localhost:4566",
+    "La URL de la cola en Floci es: http://localhost:4566/000000000000/nave-fraud-queue",
+    "Para recibir: aws sqs receive-message --queue-url <URL> --wait-time-seconds 5 --endpoint-url http://localhost:4566",
+    "Copiá el ReceiptHandle del mensaje recibido para eliminarlo"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "cmd": "aws sqs get-queue-url --queue-name nave-fraud-queue --endpoint-url http://localhost:4566",
+        "expect": "exit_code_0",
+        "criterion": "La cola 'nave-fraud-queue' existe"
+      },
+      {
+        "cmd": "aws sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/nave-fraud-queue --attribute-names ApproximateNumberOfMessages --endpoint-url http://localhost:4566",
+        "expect": "contains:ApproximateNumberOfMessages",
+        "criterion": "Se pueden consultar los atributos de la cola"
+      }
+    ]
+  }
+}

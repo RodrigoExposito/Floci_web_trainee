@@ -1,0 +1,34 @@
+{
+  "id": "01-02",
+  "title": "Subí y versioná un archivo de reglas antifraude",
+  "difficulty": 2,
+  "objective": "Subir dos versiones del mismo objeto y listar el historial de versiones",
+  "scenario": "El equipo de compliance de Nave mantiene un archivo de reglas antifraude (fraud-rules.json) que se actualiza regularmente. Necesitás demostrar que el sistema de versionado funciona: subir la versión inicial, luego una actualización, y verificar que ambas versiones están preservadas.",
+  "instructions": [
+    "Asegurate de tener el bucket 'nave-transactions' creado con versioning habilitado (del desafío anterior)",
+    "Creá un archivo llamado fraud-rules.json con contenido: {\"version\": 1, \"rules\": [\"block_amount_gt_10000\"]}",
+    "Subí fraud-rules.json al bucket con la key 'config/fraud-rules.json'",
+    "Modificá el archivo: {\"version\": 2, \"rules\": [\"block_amount_gt_10000\", \"block_new_accounts_gt_500\"]}",
+    "Subí la versión modificada con la misma key",
+    "Listá las versiones del objeto y verificá que existen 2 versiones"
+  ],
+  "hints": [
+    "Usá: aws s3api put-object --bucket nave-transactions --key config/fraud-rules.json --body fraud-rules.json --endpoint-url http://localhost:4566",
+    "Para listar versiones: aws s3api list-object-versions --bucket nave-transactions --prefix config/fraud-rules.json --endpoint-url http://localhost:4566",
+    "La respuesta debe tener un array 'Versions' con 2 elementos"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "cmd": "aws s3api list-object-versions --bucket nave-transactions --prefix config/fraud-rules.json --endpoint-url http://localhost:4566",
+        "expect": "contains:fraud-rules.json",
+        "criterion": "El objeto fraud-rules.json existe con versiones"
+      },
+      {
+        "cmd": "aws s3api list-object-versions --bucket nave-transactions --prefix config/fraud-rules.json --endpoint-url http://localhost:4566",
+        "expect": "contains:VersionId",
+        "criterion": "Existen múltiples versiones del objeto"
+      }
+    ]
+  }
+}

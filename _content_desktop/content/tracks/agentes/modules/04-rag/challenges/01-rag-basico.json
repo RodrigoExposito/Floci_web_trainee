@@ -1,0 +1,31 @@
+{
+  "id": "04-01",
+  "title": "Sistema RAG con similitud léxica",
+  "difficulty": 2,
+  "challengeType": "python",
+  "starterCode": "# Implementá la función recuperar() que encuentra el documento\n# más similar a una query usando cantidad de palabras en común.\n#\n# Para cada documento recuperado, imprimí:\n#   \"Documento recuperado: N\"  (N = índice 1-based)\n\ndocumentos = [\n    \"Python es un lenguaje dinámico ideal para inteligencia artificial.\",  # 1\n    \"RAG combina recuperación de información con generación de texto.\",     # 2\n    \"Los grafos de conocimiento estructuran datos y relaciones.\",           # 3\n    \"El machine learning aprende patrones a partir de datos de ejemplo.\",   # 4\n    \"Los embeddings representan texto como vectores numéricos.\",            # 5\n]\n\n\ndef similitud(query, doc):\n    \"\"\"Retorna la cantidad de palabras en común (case-insensitive).\"\"\"\n    q_words = set(query.lower().split())\n    d_words = set(doc.lower().split())\n    return len(q_words & d_words)\n\n\ndef recuperar(query):\n    # TODO: encontrá el índice del documento con mayor similitud a la query.\n    # Imprimí: \"Documento recuperado: N\"  (N es el índice 1-based, empieza en 1)\n    pass\n\n\n# Tests — no modifiques estas líneas\nrecuperar(\"embeddings vectores texto\")      # debe imprimir Documento recuperado: 5\nrecuperar(\"RAG generación información\")     # debe imprimir Documento recuperado: 2\n",
+  "objective": "Implementar un sistema de recuperación de documentos por similitud léxica",
+  "scenario": "Antes de usar embeddings reales, es fundamental entender el algoritmo de recuperación. Este challenge implementa la pieza central de un sistema RAG: dado un query, encontrar el documento más relevante de la base de conocimiento.",
+  "instructions": [
+    "Iterá sobre los documentos y calculá la similitud de cada uno con el query",
+    "Encontrá el índice del documento con la similitud más alta",
+    "Imprimí el resultado con formato: 'Documento recuperado: N' (N empieza en 1)"
+  ],
+  "hints": [
+    "Podés usar max() con una función key: max(range(len(documentos)), key=lambda i: similitud(query, documentos[i]))",
+    "El índice 1-based es: índice_0_based + 1",
+    "print(f\"Documento recuperado: {mejor_idx + 1}\")"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "expect": "stdout_contains:Documento recuperado: 5",
+        "criterion": "Query 'embeddings vectores texto' recupera el doc 5"
+      },
+      {
+        "expect": "stdout_contains:Documento recuperado: 2",
+        "criterion": "Query 'RAG generación información' recupera el doc 2"
+      }
+    ]
+  }
+}

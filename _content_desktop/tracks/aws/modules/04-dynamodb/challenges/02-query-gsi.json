@@ -1,0 +1,32 @@
+{
+  "id": "04-02",
+  "title": "GSI: consultá transacciones por status",
+  "difficulty": 2,
+  "objective": "Crear un GSI en el campo 'status' y hacer queries para encontrar transacciones flagged",
+  "scenario": "El equipo de fraude de Nave necesita consultar todas las transacciones con status='flagged' en tiempo real para revisión manual. Sin un índice, esto requeriría un Scan costoso. Creá un GSI en el campo status para hacer queries eficientes.",
+  "instructions": [
+    "Creá una nueva tabla 'nave-transactions-indexed' con PK=transaction_id (S), SK=timestamp (S) y un GSI llamado 'status-index' con PK=status (S) y SK=timestamp (S)",
+    "Insertá al menos 4 ítems con distintos status: 2 'completed', 1 'pending', 1 'flagged'",
+    "Hacé un Query al GSI 'status-index' filtrando por status='flagged'",
+    "Verificá que solo retorna el ítem con status flagged"
+  ],
+  "hints": [
+    "Para crear tabla con GSI: agregar --global-secondary-indexes con IndexName, KeySchema y Projection en el create-table",
+    "Query al GSI: aws dynamodb query --table-name nave-transactions-indexed --index-name status-index --key-condition-expression \"#s = :status\" --expression-attribute-names '{\"#s\":\"status\"}' --expression-attribute-values '{\":status\":{\"S\":\"flagged\"}}' --endpoint-url http://localhost:4566",
+    "Usá #s como alias porque 'status' es una reserved word en DynamoDB"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "cmd": "aws dynamodb describe-table --table-name nave-transactions-indexed --endpoint-url http://localhost:4566",
+        "expect": "contains:status-index",
+        "criterion": "La tabla tiene el GSI 'status-index'"
+      },
+      {
+        "cmd": "aws dynamodb query --table-name nave-transactions-indexed --index-name status-index --key-condition-expression \"#s = :s\" --expression-attribute-names '{\"#s\":\"status\"}' --expression-attribute-values '{\":s\":{\"S\":\"flagged\"}}' --endpoint-url http://localhost:4566",
+        "expect": "contains:flagged",
+        "criterion": "El query al GSI retorna transacciones flagged"
+      }
+    ]
+  }
+}

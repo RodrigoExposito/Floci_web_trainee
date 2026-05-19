@@ -1,0 +1,116 @@
+{
+  "modules": [
+    {
+      "id": "01-s3",
+      "title": "S3 Fundamentals",
+      "description": "Buckets, objects, versioning, lifecycle, pre-signed URLs",
+      "serviceTag": "S3",
+      "prereqs": [],
+      "order": 1
+    },
+    {
+      "id": "02-sqs",
+      "title": "SQS & Messaging",
+      "description": "Standard queues, FIFO, Dead Letter Queues, visibility timeout",
+      "serviceTag": "SQS",
+      "prereqs": ["01-s3"],
+      "order": 2
+    },
+    {
+      "id": "03-lambda",
+      "title": "Lambda Basics",
+      "description": "Functions, handlers, runtimes, cold starts, invocation",
+      "serviceTag": "Lambda",
+      "prereqs": ["01-s3"],
+      "order": 3
+    },
+    {
+      "id": "04-dynamodb",
+      "title": "DynamoDB",
+      "description": "Tables, keys, indexes, queries, capacity modes",
+      "serviceTag": "DynamoDB",
+      "prereqs": ["01-s3"],
+      "order": 4
+    },
+    {
+      "id": "05-s3-lambda",
+      "title": "S3 + Lambda Integration",
+      "description": "Event notifications, triggers, processing pipelines",
+      "serviceTag": "S3+Lambda",
+      "prereqs": ["01-s3", "03-lambda"],
+      "order": 5
+    },
+    {
+      "id": "06-sqs-lambda",
+      "title": "SQS + Lambda",
+      "description": "Event source mapping, batch processing, error handling",
+      "serviceTag": "SQS+Lambda",
+      "prereqs": ["02-sqs", "03-lambda"],
+      "order": 6
+    },
+    {
+      "id": "07-eventbridge",
+      "title": "EventBridge",
+      "description": "Event bus, rules, patterns, targets, scheduling",
+      "serviceTag": "EventBridge",
+      "prereqs": ["03-lambda"],
+      "order": 7
+    },
+    {
+      "id": "08-dynamodb-streams",
+      "title": "DynamoDB Streams + Lambda",
+      "description": "Change data capture, stream processing, triggers",
+      "serviceTag": "DynamoDB+Lambda",
+      "prereqs": ["04-dynamodb", "03-lambda"],
+      "order": 8
+    },
+    {
+      "id": "09-step-functions",
+      "title": "Step Functions",
+      "description": "State machines, workflows, error handling, parallel execution",
+      "serviceTag": "StepFunctions",
+      "prereqs": ["03-lambda"],
+      "order": 9
+    },
+    {
+      "id": "10-kinesis",
+      "title": "Kinesis",
+      "description": "Data streams, shards, consumers, real-time processing",
+      "serviceTag": "Kinesis",
+      "prereqs": ["03-lambda"],
+      "order": 10
+    },
+    {
+      "id": "11-iam",
+      "title": "IAM Deep Dive",
+      "description": "Policies, roles, trust relationships, least privilege",
+      "serviceTag": "IAM",
+      "prereqs": ["01-s3", "03-lambda"],
+      "order": 11
+    },
+    {
+      "id": "12-cloudformation",
+      "title": "CloudFormation / IaC",
+      "description": "Templates, stacks, parameters, outputs, drift detection",
+      "serviceTag": "CloudFormation",
+      "prereqs": ["01-s3", "03-lambda", "04-dynamodb"],
+      "order": 12
+    },
+    {
+      "id": "13-cloudwatch",
+      "title": "Observability (CloudWatch)",
+      "description": "Logs, metrics, alarms, dashboards, insights",
+      "serviceTag": "CloudWatch",
+      "prereqs": ["03-lambda"],
+      "order": 13
+    },
+    {
+      "id": "14-security",
+      "title": "Security (KMS, Secrets Manager)",
+      "description": "Encryption, key management, secret rotation, envelope encryption",
+      "serviceTag": "Security",
+      "prereqs": ["11-iam"],
+      "order": 14
+    }
+  ]
+}

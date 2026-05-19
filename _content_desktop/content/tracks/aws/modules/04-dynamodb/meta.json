@@ -1,0 +1,8 @@
+{
+  "id": "04-dynamodb",
+  "title": "DynamoDB",
+  "description": "Tables, keys, indexes, queries, capacity modes",
+  "prereqs": ["01-s3"],
+  "lessons": ["01-tables-keys", "02-indexes-queries"],
+  "challenges": ["01-create-table", "02-query-gsi"]
+}

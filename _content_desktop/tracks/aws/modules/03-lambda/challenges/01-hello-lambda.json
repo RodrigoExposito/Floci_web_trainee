@@ -1,0 +1,33 @@
+{
+  "id": "03-01",
+  "title": "Tu primera función Lambda",
+  "difficulty": 1,
+  "objective": "Crear una función Lambda en Python que retorne un JSON con timestamp e invocarla",
+  "scenario": "El equipo de Nave necesita una función Lambda de health-check que retorne el estado del servicio con timestamp. Será el patrón base para todas las funciones del sistema de pagos.",
+  "instructions": [
+    "Creá un archivo handler.py con una función lambda_handler que retorne: {\"statusCode\": 200, \"body\": {\"service\": \"nave-health\", \"status\": \"ok\", \"timestamp\": \"<unix timestamp>\"}}",
+    "Empaquetá el archivo en un zip: zip function.zip handler.py",
+    "Creá la función Lambda llamada 'nave-health-check' usando Python 3.12 y el role ARN: arn:aws:iam::000000000000:role/lambda-role",
+    "Invocá la función y verificá que la respuesta contiene statusCode 200",
+    "Revisá los logs de la invocación"
+  ],
+  "hints": [
+    "En Python: import time; timestamp = int(time.time())",
+    "Crear función: aws lambda create-function --function-name nave-health-check --runtime python3.12 --role arn:aws:iam::000000000000:role/lambda-role --handler handler.lambda_handler --zip-file fileb://function.zip --endpoint-url http://localhost:4566",
+    "Invocar: aws lambda invoke --function-name nave-health-check --endpoint-url http://localhost:4566 response.json && cat response.json"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "cmd": "aws lambda get-function --function-name nave-health-check --endpoint-url http://localhost:4566",
+        "expect": "exit_code_0",
+        "criterion": "La función 'nave-health-check' existe en Lambda"
+      },
+      {
+        "cmd": "aws lambda get-function --function-name nave-health-check --endpoint-url http://localhost:4566",
+        "expect": "contains:python3.12",
+        "criterion": "La función usa el runtime Python 3.12"
+      }
+    ]
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "id": "02-memoria",
+  "title": "Memoria y Estado",
+  "description": "Tipos de memoria, conversaciones y búsqueda semántica",
+  "prereqs": ["01-fundamentos"],
+  "lessons": ["01-tipos-memoria", "02-busqueda-semantica"],
+  "challenges": ["01-memoria-simple"]
+}

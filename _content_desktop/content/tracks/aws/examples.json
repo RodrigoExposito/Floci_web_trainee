@@ -1,0 +1,30 @@
+[
+  {
+    "id": "aws-01",
+    "title": "Pipeline S3 → Lambda → DynamoDB",
+    "description": "Procesá archivos subidos a S3 con Lambda y persistí los resultados en DynamoDB",
+    "category": "Integración",
+    "difficulty": 2
+  },
+  {
+    "id": "aws-02",
+    "title": "SQS con Dead Letter Queue para reintentos",
+    "description": "Implementá una cola de mensajes con reintentos automáticos y manejo de fallos",
+    "category": "Mensajería",
+    "difficulty": 2
+  },
+  {
+    "id": "aws-03",
+    "title": "API serverless con Lambda + DynamoDB",
+    "description": "Exponiá una API REST sin servidores usando Lambda Function URL y DynamoDB",
+    "category": "API",
+    "difficulty": 2
+  },
+  {
+    "id": "aws-04",
+    "title": "Infraestructura como código con CloudFormation",
+    "description": "Definí y desplegá recursos AWS reproducibles usando plantillas CloudFormation",
+    "category": "IaC",
+    "difficulty": 3
+  }
+]

@@ -1,0 +1,33 @@
+{
+  "id": "01-01",
+  "title": "Crea tu primer bucket S3",
+  "difficulty": 1,
+  "objective": "Crear un bucket S3 llamado 'nave-transactions' con versioning habilitado",
+  "scenario": "En Nave, el equipo de fraude necesita almacenar archivos de transacciones para análisis. Tu primera tarea es crear el bucket donde se guardarán estos archivos, con versionado activado para poder rastrear cambios.",
+  "instructions": [
+    "Abrí tu terminal y asegurate de que Floci esté corriendo (docker compose -f docker/docker-compose.yml up -d)",
+    "Configurá las credenciales dummy: export AWS_ACCESS_KEY_ID=test AWS_SECRET_ACCESS_KEY=test AWS_DEFAULT_REGION=us-east-1",
+    "Usá AWS CLI para crear un bucket llamado 'nave-transactions'",
+    "Habilitá el versionado en ese bucket",
+    "Verificá que el bucket exista y tenga versioning activo"
+  ],
+  "hints": [
+    "El comando para crear buckets es: aws s3api create-bucket --bucket <nombre> --endpoint-url http://localhost:4566",
+    "Para versioning: aws s3api put-bucket-versioning --bucket <nombre> --versioning-configuration Status=Enabled --endpoint-url http://localhost:4566",
+    "Para verificar: aws s3api get-bucket-versioning --bucket <nombre> --endpoint-url http://localhost:4566"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "cmd": "aws s3api head-bucket --bucket nave-transactions --endpoint-url http://localhost:4566",
+        "expect": "exit_code_0",
+        "criterion": "El bucket 'nave-transactions' existe"
+      },
+      {
+        "cmd": "aws s3api get-bucket-versioning --bucket nave-transactions --endpoint-url http://localhost:4566",
+        "expect": "contains:Enabled",
+        "criterion": "Versioning está habilitado"
+      }
+    ]
+  }
+}

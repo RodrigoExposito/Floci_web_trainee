@@ -1,0 +1,31 @@
+{
+  "id": "01-03",
+  "title": "Generá una pre-signed URL para un auditor externo",
+  "difficulty": 2,
+  "objective": "Generar una pre-signed URL para un objeto de S3 que expire en 1 hora",
+  "scenario": "Un auditor externo de una firma regulatoria necesita acceder temporalmente al reporte mensual de transacciones de Nave. No podés darle credenciales AWS, pero sí una URL temporal que expire después de la auditoría. Generá una pre-signed URL válida por 3600 segundos.",
+  "instructions": [
+    "Subí un archivo de reporte al bucket: creá audit-report-2024-01.txt con contenido 'Reporte de auditoría Enero 2024' y subilo al path 'reports/audit-report-2024-01.txt'",
+    "Generá una pre-signed URL para ese objeto con expiración de 3600 segundos",
+    "Verificá que la URL sea accesible con curl o wget"
+  ],
+  "hints": [
+    "Primero subí el archivo: aws s3api put-object --bucket nave-transactions --key reports/audit-report-2024-01.txt --body audit-report-2024-01.txt --endpoint-url http://localhost:4566",
+    "Para generar la pre-signed URL: aws s3 presign s3://nave-transactions/reports/audit-report-2024-01.txt --expires-in 3600 --endpoint-url http://localhost:4566",
+    "Para verificar acceso: curl '<URL generada>' (debe devolver el contenido del archivo)"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "cmd": "aws s3api head-object --bucket nave-transactions --key reports/audit-report-2024-01.txt --endpoint-url http://localhost:4566",
+        "expect": "exit_code_0",
+        "criterion": "El objeto del reporte existe en S3"
+      },
+      {
+        "cmd": "aws s3 presign s3://nave-transactions/reports/audit-report-2024-01.txt --expires-in 3600 --endpoint-url http://localhost:4566",
+        "expect": "contains:X-Amz-Signature",
+        "criterion": "La pre-signed URL contiene firma válida"
+      }
+    ]
+  }
+}

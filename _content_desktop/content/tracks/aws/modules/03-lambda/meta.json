@@ -1,0 +1,8 @@
+{
+  "id": "03-lambda",
+  "title": "Lambda Basics",
+  "description": "Functions, handlers, runtimes, cold starts, invocation",
+  "prereqs": ["01-s3"],
+  "lessons": ["01-functions-basics", "02-environment-layers"],
+  "challenges": ["01-hello-lambda", "02-lambda-env"]
+}

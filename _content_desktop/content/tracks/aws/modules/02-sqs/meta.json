@@ -1,0 +1,8 @@
+{
+  "id": "02-sqs",
+  "title": "SQS & Messaging",
+  "description": "Standard queues, FIFO, Dead Letter Queues, visibility timeout",
+  "prereqs": ["01-s3"],
+  "lessons": ["01-queues-basics", "02-dlq-patterns"],
+  "challenges": ["01-create-queue", "02-fifo-dlq"]
+}

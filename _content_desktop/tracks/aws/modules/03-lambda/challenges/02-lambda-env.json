@@ -1,0 +1,32 @@
+{
+  "id": "03-02",
+  "title": "Lambda con variables de entorno",
+  "difficulty": 2,
+  "objective": "Crear una función Lambda que use variables de entorno y retorne su configuración en la respuesta",
+  "scenario": "Las funciones de Nave necesitan saber en qué entorno están corriendo y qué tabla de DynamoDB usar. Creá una función que lea sus variables de entorno y las incluya en la respuesta, demostrando que la configuración es inyectable sin cambiar el código.",
+  "instructions": [
+    "Creá handler.py con una función que lea os.environ['ENVIRONMENT'], os.environ['TABLE_NAME'] y los retorne en el body JSON",
+    "Creá la función 'nave-config-demo' con variables de entorno: ENVIRONMENT=staging, TABLE_NAME=nave-transactions",
+    "Invocá la función y verificá que la respuesta incluye los valores de las env vars",
+    "Actualizá las env vars a ENVIRONMENT=production y volvé a invocar para verificar el cambio sin redesplegar código"
+  ],
+  "hints": [
+    "En Python: import os; env = os.environ.get('ENVIRONMENT', 'unknown')",
+    "Agregar env vars al crear: --environment Variables={ENVIRONMENT=staging,TABLE_NAME=nave-transactions}",
+    "Actualizar config: aws lambda update-function-configuration --function-name nave-config-demo --environment Variables={ENVIRONMENT=production,TABLE_NAME=nave-transactions-prod} --endpoint-url http://localhost:4566"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "cmd": "aws lambda get-function-configuration --function-name nave-config-demo --endpoint-url http://localhost:4566",
+        "expect": "exit_code_0",
+        "criterion": "La función 'nave-config-demo' existe"
+      },
+      {
+        "cmd": "aws lambda get-function-configuration --function-name nave-config-demo --endpoint-url http://localhost:4566",
+        "expect": "contains:TABLE_NAME",
+        "criterion": "La función tiene variables de entorno configuradas"
+      }
+    ]
+  }
+}

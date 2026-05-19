@@ -1,0 +1,8 @@
+{
+  "id": "04-rag",
+  "title": "RAG y Bases de Conocimiento",
+  "description": "Recuperación de información y generación aumentada",
+  "prereqs": ["03-herramientas"],
+  "lessons": ["01-que-es-rag", "02-embeddings-chunking"],
+  "challenges": ["01-rag-basico"]
+}

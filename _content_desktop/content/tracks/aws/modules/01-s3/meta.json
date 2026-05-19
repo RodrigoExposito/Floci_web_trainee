@@ -1,0 +1,8 @@
+{
+  "id": "01-s3",
+  "title": "S3 Fundamentals",
+  "description": "Buckets, objects, versioning, lifecycle, pre-signed URLs",
+  "prereqs": [],
+  "lessons": ["01-buckets", "02-objects", "03-versioning"],
+  "challenges": ["01-create-bucket", "02-upload-versions", "03-presigned-url"]
+}

@@ -1,0 +1,38 @@
+{
+  "id": "02-02",
+  "title": "Configurá FIFO con Dead Letter Queue",
+  "difficulty": 2,
+  "objective": "Crear una cola FIFO con DLQ y redrive policy para el pipeline de autorización de Nave",
+  "scenario": "El pipeline de autorización de Nave requiere procesamiento ordenado de transacciones (FIFO) con manejo de errores robusto. Las transacciones que fallen 3 veces deben ir a una DLQ para revisión manual. Configurá la infraestructura completa.",
+  "instructions": [
+    "Creá primero la DLQ: 'nave-authorization-dlq.fifo' (también debe ser FIFO)",
+    "Creá la cola principal 'nave-authorization.fifo' con ContentBasedDeduplication habilitado y redrive policy apuntando a la DLQ con maxReceiveCount=3",
+    "Enviá un mensaje de prueba a la cola FIFO con MessageGroupId='auth-group-1'",
+    "Verificá que ambas colas existen y la redrive policy está configurada"
+  ],
+  "hints": [
+    "Las colas FIFO deben terminar en .fifo: --queue-name nave-authorization.fifo",
+    "Atributos para FIFO: --attributes FifoQueue=true,ContentBasedDeduplication=true",
+    "Para la DLQ necesitás el ARN: arn:aws:sqs:us-east-1:000000000000:nave-authorization-dlq.fifo",
+    "Para enviar a FIFO necesitás --message-group-id y opcionalmente --message-deduplication-id"
+  ],
+  "validation": {
+    "commands": [
+      {
+        "cmd": "aws sqs get-queue-url --queue-name nave-authorization.fifo --endpoint-url http://localhost:4566",
+        "expect": "exit_code_0",
+        "criterion": "La cola FIFO principal existe"
+      },
+      {
+        "cmd": "aws sqs get-queue-url --queue-name nave-authorization-dlq.fifo --endpoint-url http://localhost:4566",
+        "expect": "exit_code_0",
+        "criterion": "La Dead Letter Queue FIFO existe"
+      },
+      {
+        "cmd": "aws sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/nave-authorization.fifo --attribute-names RedrivePolicy --endpoint-url http://localhost:4566",
+        "expect": "contains:maxReceiveCount",
+        "criterion": "La redrive policy está configurada en la cola principal"
+      }
+    ]
+  }
+}

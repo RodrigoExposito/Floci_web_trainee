@@ -1,0 +1,53 @@
+{
+  "id": "aws-04",
+  "title": "Infraestructura como código con CloudFormation",
+  "category": "IaC",
+  "difficulty": 3,
+  "description": "Definí y desplegá recursos AWS reproducibles usando plantillas CloudFormation",
+  "context": "En Nave, cada ambiente (dev, staging, prod) debe ser idéntico. Sin IaC, un recurso creado manualmente en staging puede no existir en prod. CloudFormation define todos los recursos en YAML — el mismo archivo crea el ambiente completo en cualquier cuenta, eliminando configuración manual y reduciendo errores de entorno.",
+  "updatedAt": "2026",
+  "blocks": [
+    {
+      "type": "text",
+      "content": "## Por qué CloudFormation en 2026\n\nCon Terraform dominando el mercado multi-cloud, CloudFormation sigue siendo la opción nativa AWS por:\n\n- **Sin dependencias externas**: viene con cada cuenta AWS.\n- **Drift detection**: detecta si alguien modificó un recurso manualmente fuera del stack.\n- **Rollback automático**: si un recurso falla al crear, CloudFormation deshace todo automáticamente.\n- **Change sets**: podés revisar qué va a cambiar antes de aplicarlo, como un `terraform plan`.\n\nPara equipos 100% AWS y sin necesidad de multi-cloud, CloudFormation sigue siendo una excelente elección."
+    },
+    {
+      "type": "text",
+      "content": "## La plantilla: stack completo de procesamiento de transacciones"
+    },
+    {
+      "type": "code",
+      "language": "yaml",
+      "caption": "nave-stack.yaml — bucket S3, tabla DynamoDB y cola SQS en un stack",
+      "content": "AWSTemplateFormatVersion: '2010-09-09'\nDescription: 'Nave — Stack de procesamiento de transacciones'\n\nParameters:\n  Environment:\n    Type: String\n    AllowedValues: [dev, staging, prod]\n    Default: dev\n    Description: Ambiente de despliegue\n\nResources:\n  # ── S3 Bucket ───────────────────────────────────────────────────────────────\n  TransactionsBucket:\n    Type: AWS::S3::Bucket\n    Properties:\n      BucketName: !Sub 'nave-transactions-${Environment}-${AWS::AccountId}'\n      VersioningConfiguration:\n        Status: Enabled\n      LifecycleConfiguration:\n        Rules:\n          - Id: ArchiveAfter90Days\n            Status: Enabled\n            Transitions:\n              - TransitionInDays: 90\n                StorageClass: GLACIER\n      Tags:\n        - Key: Environment\n          Value: !Ref Environment\n        - Key: Project\n          Value: Nave\n\n  # ── DynamoDB Table ──────────────────────────────────────────────────────────\n  SummariesTable:\n    Type: AWS::DynamoDB::Table\n    Properties:\n      TableName: !Sub 'TransactionSummaries-${Environment}'\n      BillingMode: PAY_PER_REQUEST\n      AttributeDefinitions:\n        - AttributeName: merchant_id\n          AttributeType: S\n        - AttributeName: date\n          AttributeType: S\n      KeySchema:\n        - AttributeName: merchant_id\n          KeyType: HASH\n        - AttributeName: date\n          KeyType: RANGE\n      PointInTimeRecoverySpecification:\n        PointInTimeRecoveryEnabled: !If [IsProd, true, false]\n      Tags:\n        - Key: Environment\n          Value: !Ref Environment\n\n  # ── SQS Queue con DLQ ───────────────────────────────────────────────────────\n  PaymentsDLQ:\n    Type: AWS::SQS::Queue\n    Properties:\n      QueueName: !Sub 'nave-payments-dlq-${Environment}'\n      MessageRetentionPeriod: 1209600  # 14 días\n\n  PaymentsQueue:\n    Type: AWS::SQS::Queue\n    Properties:\n      QueueName: !Sub 'nave-payments-${Environment}'\n      VisibilityTimeout: 30\n      RedrivePolicy:\n        deadLetterTargetArn: !GetAtt PaymentsDLQ.Arn\n        maxReceiveCount: 3\n\nConditions:\n  IsProd: !Equals [!Ref Environment, prod]\n\nOutputs:\n  BucketName:\n    Value: !Ref TransactionsBucket\n    Export:\n      Name: !Sub '${AWS::StackName}-BucketName'\n  TableName:\n    Value: !Ref SummariesTable\n    Export:\n      Name: !Sub '${AWS::StackName}-TableName'\n  QueueUrl:\n    Value: !Ref PaymentsQueue\n    Export:\n      Name: !Sub '${AWS::StackName}-QueueUrl'"
+    },
+    {
+      "type": "text",
+      "content": "## Desplegar el stack"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Crear el stack en Floci (equivalente a cualquier región AWS)",
+      "content": "# Validar la plantilla antes de desplegar\naws cloudformation validate-template \\\n  --template-body file://nave-stack.yaml \\\n  --endpoint-url http://localhost:4566\n\n# Crear el stack (ambiente dev)\naws cloudformation create-stack \\\n  --stack-name nave-dev \\\n  --template-body file://nave-stack.yaml \\\n  --parameters ParameterKey=Environment,ParameterValue=dev \\\n  --endpoint-url http://localhost:4566\n\n# Esperar a que termine (CloudFormation es asíncrono)\naws cloudformation wait stack-create-complete \\\n  --stack-name nave-dev \\\n  --endpoint-url http://localhost:4566\n\n# Ver los outputs (nombres de recursos creados)\naws cloudformation describe-stacks \\\n  --stack-name nave-dev \\\n  --query 'Stacks[0].Outputs' \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "result",
+      "content": "[\n  {\n    \"OutputKey\": \"BucketName\",\n    \"OutputValue\": \"nave-transactions-dev-000000000000\",\n    \"ExportName\": \"nave-dev-BucketName\"\n  },\n  {\n    \"OutputKey\": \"TableName\",\n    \"OutputValue\": \"TransactionSummaries-dev\",\n    \"ExportName\": \"nave-dev-TableName\"\n  },\n  {\n    \"OutputKey\": \"QueueUrl\",\n    \"OutputValue\": \"http://localhost:4566/000000000000/nave-payments-dev\",\n    \"ExportName\": \"nave-dev-QueueUrl\"\n  }\n]"
+    },
+    {
+      "type": "text",
+      "content": "## Actualizar el stack con un Change Set"
+    },
+    {
+      "type": "code",
+      "language": "bash",
+      "caption": "Revisar cambios antes de aplicarlos — equivalente a terraform plan",
+      "content": "# Crear un change set (no aplica cambios todavía)\naws cloudformation create-change-set \\\n  --stack-name nave-dev \\\n  --change-set-name add-retention-policy \\\n  --template-body file://nave-stack-v2.yaml \\\n  --parameters ParameterKey=Environment,ParameterValue=dev \\\n  --endpoint-url http://localhost:4566\n\n# Revisar qué va a cambiar\naws cloudformation describe-change-set \\\n  --stack-name nave-dev \\\n  --change-set-name add-retention-policy \\\n  --query 'Changes[].ResourceChange.{Action:Action,Resource:LogicalResourceId,Replace:Replacement}' \\\n  --endpoint-url http://localhost:4566\n\n# Aplicar el change set (una vez revisado)\naws cloudformation execute-change-set \\\n  --stack-name nave-dev \\\n  --change-set-name add-retention-policy \\\n  --endpoint-url http://localhost:4566"
+    },
+    {
+      "type": "note",
+      "content": "**Immutable infrastructure**: nunca modificues recursos del stack manualmente desde la consola o CLI fuera de CloudFormation. Si lo hacés, `drift detection` lo va a detectar y el próximo update puede sobreescribir tus cambios manuales sin aviso."
+    }
+  ]
+}
