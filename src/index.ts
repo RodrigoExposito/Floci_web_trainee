@@ -95,11 +95,17 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const publicDir = join(__dirname, "../public");
 if (existsSync(publicDir)) {
   app.use(express.static(publicDir));
-  // Catch-all: return index.html for SPA client-side routing
-  app.get("*", (_req, res) => {
+  // Catch-all: return index.html for SPA client-side routing.
+  // Explicitly exclude /api/* so unmatched API paths return 404 JSON, not HTML.
+  app.get(/^(?!\/api\/).*/, (_req, res) => {
     res.sendFile(join(publicDir, "index.html"));
   });
 }
+
+// ── 404 for unmatched /api/* routes ──────────────────────────────────────────
+app.use("/api", (_req, res) => {
+  res.status(404).json({ ok: false, error: { code: "NOT_FOUND", message: "Endpoint not found" } });
+});
 
 // ── Global error handler (must be last) ──────────────────────────────────────
 app.use(errorHandler);

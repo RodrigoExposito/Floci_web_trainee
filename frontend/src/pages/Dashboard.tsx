@@ -7,6 +7,7 @@ import { useTrackStore, type TrackId } from "@/stores/track-store";
 import { ModuleCard } from "@/components/curriculum/ModuleCard";
 import { ActiveModuleCard } from "@/components/curriculum/ActiveModuleCard";
 import { getProgress } from "@/lib/api";
+import { useAiStore } from "@/stores/ai-store";
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -22,6 +23,7 @@ export default function Dashboard() {
 
   const { hydrateFromDb, getModuleStatus } = useProgressStore();
   const { setActiveTrack } = useTrackStore();
+  const { setContext } = useAiStore();
 
   const { modules } = loadCurriculum(trackId);
   const examples = loadExamples(trackId);
@@ -39,6 +41,16 @@ export default function Dashboard() {
     }
     void loadProgressData();
   }, [trackId]);
+
+  useEffect(() => {
+    const trackLabel = trackId === "agentes" ? "Agente Trainee" : "AWS Trainee";
+    const completed = modules.filter((m) => getModuleStatus(m.id) === "completed").length;
+    setContext(
+      "dashboard",
+      `El estudiante está en el Dashboard del track "${trackLabel}". ` +
+      `Hay ${modules.length} módulos disponibles, ${completed} completados.`
+    );
+  }, [trackId, modules.length]);
 
   const activeModule =
     modules.find((m) => getModuleStatus(m.id) === "active") ?? modules[0];

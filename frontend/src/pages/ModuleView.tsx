@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { BookOpen, Target, CheckCircle, Circle, Lock } from "lucide-react";
 import { loadModule } from "@/lib/curriculum-loader";
 import { getModuleMeta } from "@/lib/module-registry";
 import { getLessonTitle, getChallengeTitle } from "@/lib/content-registry";
 import { useProgressStore } from "@/stores/progress-store";
+import { useAiStore } from "@/stores/ai-store";
 import type { ProgressStatus } from "@/lib/types";
 
 function StatusIcon({ status }: { status: ProgressStatus }) {
@@ -32,11 +34,23 @@ export default function ModuleView() {
   const { trackId, moduleId } = useParams<{ trackId: string; moduleId: string }>();
   const navigate = useNavigate();
   const getLessonStatus = useProgressStore((s) => s.getLessonStatus);
+  const { setContext } = useAiStore();
+
+  // All hooks must run before any conditional return
+  const mod = trackId && moduleId ? loadModule(trackId, moduleId) : undefined;
+  const meta = trackId && moduleId ? getModuleMeta(trackId, moduleId) : undefined;
+
+  useEffect(() => {
+    if (!trackId || !moduleId || !mod || !meta) return;
+    setContext(
+      "lesson",
+      `El estudiante está explorando el módulo "${mod.title}". ` +
+      `${mod.description} ` +
+      `Tiene ${meta.lessons.length} lección(es) y ${meta.challenges.length} challenge(s).`
+    );
+  }, [trackId, moduleId]);
 
   if (!trackId || !moduleId) return null;
-
-  const mod = loadModule(trackId, moduleId);
-  const meta = getModuleMeta(trackId, moduleId);
 
   if (!mod || !meta) {
     navigate(`/${trackId}`, { replace: true });

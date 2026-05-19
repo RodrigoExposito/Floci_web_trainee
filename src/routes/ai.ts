@@ -38,9 +38,9 @@ async function handleAiChat(req: Request, res: Response): Promise<void> {
   }
 }
 
-// POST /api/ai/chat  (W5 primary)
+// POST /api/ai/chat  (mounted at /api/ai → path here is /chat)
 // POST /api/ai/hint  (backward-compat alias)
-router.post("/ai/chat", (req, res) => { void handleAiChat(req, res); });
-router.post("/ai/hint", (req, res) => { void handleAiChat(req, res); });
+router.post("/chat", (req, res) => { void handleAiChat(req, res); });
+router.post("/hint", (req, res) => { void handleAiChat(req, res); });
 
 export default router;
