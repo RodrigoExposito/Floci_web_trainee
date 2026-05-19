@@ -71,6 +71,7 @@ export function AIPanel() {
       style={{
         width: 360,
         minWidth: 360,
+        height: "100%",
         background: "var(--bg-sidebar)",
         borderLeft: "1px solid var(--border-soft)",
         display: "flex",
