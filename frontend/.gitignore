@@ -2,3 +2,4 @@ node_modules/
 dist/
 *.tsbuildinfo
 src/content/tracks/
+pnpm-workspace.yaml
