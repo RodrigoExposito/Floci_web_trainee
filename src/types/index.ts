@@ -1,5 +1,13 @@
 export type ProgressStatus = "locked" | "active" | "completed";
 
+export interface User {
+  id: number;
+  username: string;
+  password_hash: string;
+  display_name: string | null;
+  created_at: string;
+}
+
 export interface ProgressRecord {
   id: number;
   track_id: string;

@@ -13,8 +13,11 @@ router.get("/progress", async (req: Request, res: Response) => {
   }
 
   const result = await pool.query<ProgressRecord>(
-    "SELECT id, track_id, module_id, lesson_id, status, completed_at FROM progress WHERE track_id = $1 ORDER BY id",
-    [trackId]
+    `SELECT id, track_id, module_id, lesson_id, status, completed_at
+     FROM progress
+     WHERE user_id = $1 AND track_id = $2
+     ORDER BY id`,
+    [req.userId, trackId]
   );
   res.json({ ok: true, data: result.rows });
 });
@@ -42,12 +45,12 @@ router.post("/progress", async (req: Request, res: Response) => {
   const completedAt = status === "completed" ? new Date().toISOString() : null;
 
   const result = await pool.query<ProgressRecord>(
-    `INSERT INTO progress (track_id, module_id, lesson_id, status, completed_at)
-     VALUES ($1, $2, $3, $4, $5)
-     ON CONFLICT (track_id, module_id, lesson_id)
+    `INSERT INTO progress (user_id, track_id, module_id, lesson_id, status, completed_at)
+     VALUES ($1, $2, $3, $4, $5, $6)
+     ON CONFLICT ON CONSTRAINT progress_user_track_module_lesson_key
      DO UPDATE SET status = EXCLUDED.status, completed_at = EXCLUDED.completed_at
      RETURNING id, track_id, module_id, lesson_id, status, completed_at`,
-    [track_id, module_id, lesson_id, status, completedAt]
+    [req.userId, track_id, module_id, lesson_id, status, completedAt]
   );
 
   res.status(201).json({ ok: true, data: result.rows[0] });
@@ -58,8 +61,10 @@ router.delete("/progress", async (req: Request, res: Response) => {
   const trackId = req.query["track"];
   const moduleId = req.query["module"];
 
-  if (typeof trackId !== "string" || trackId.trim() === "" ||
-      typeof moduleId !== "string" || moduleId.trim() === "") {
+  if (
+    typeof trackId !== "string" || trackId.trim() === "" ||
+    typeof moduleId !== "string" || moduleId.trim() === ""
+  ) {
     res.status(400).json({
       ok: false,
       error: { code: "MISSING_PARAMS", message: "Query params 'track' and 'module' are required" },
@@ -68,8 +73,8 @@ router.delete("/progress", async (req: Request, res: Response) => {
   }
 
   await pool.query(
-    "DELETE FROM progress WHERE track_id = $1 AND module_id = $2",
-    [trackId, moduleId]
+    "DELETE FROM progress WHERE user_id = $1 AND track_id = $2 AND module_id = $3",
+    [req.userId, trackId, moduleId]
   );
   res.json({ ok: true });
 });
@@ -86,7 +91,10 @@ router.delete("/progress/all", async (req: Request, res: Response) => {
     return;
   }
 
-  await pool.query("DELETE FROM progress WHERE track_id = $1", [trackId]);
+  await pool.query(
+    "DELETE FROM progress WHERE user_id = $1 AND track_id = $2",
+    [req.userId, trackId]
+  );
   res.json({ ok: true });
 });
 

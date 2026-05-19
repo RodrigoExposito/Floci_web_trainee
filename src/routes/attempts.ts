@@ -4,7 +4,7 @@ import type { ChallengeAttempt } from "../types/index.js";
 
 const router = Router();
 
-// POST /api/attempts — register attempt, auto-increment attempt_number per challenge
+// POST /api/attempts — register attempt, auto-increment attempt_number per user+challenge
 router.post("/attempts", async (req: Request, res: Response) => {
   const { track_id, challenge_id, passed, feedback } = req.body as Record<string, unknown>;
 
@@ -24,18 +24,18 @@ router.post("/attempts", async (req: Request, res: Response) => {
     return;
   }
 
-  // Compute next attempt_number for this challenge
+  // Compute next attempt_number for this user+challenge
   const countResult = await pool.query<{ count: string }>(
-    "SELECT COUNT(*) AS count FROM challenge_attempts WHERE track_id = $1 AND challenge_id = $2",
-    [track_id, challenge_id]
+    "SELECT COUNT(*) AS count FROM challenge_attempts WHERE user_id = $1 AND track_id = $2 AND challenge_id = $3",
+    [req.userId, track_id, challenge_id]
   );
   const nextAttempt = parseInt(countResult.rows[0]?.count ?? "0", 10) + 1;
 
   const result = await pool.query<ChallengeAttempt>(
-    `INSERT INTO challenge_attempts (track_id, challenge_id, attempt_number, passed, feedback)
-     VALUES ($1, $2, $3, $4, $5)
+    `INSERT INTO challenge_attempts (user_id, track_id, challenge_id, attempt_number, passed, feedback)
+     VALUES ($1, $2, $3, $4, $5, $6)
      RETURNING id, track_id, challenge_id, attempt_number, passed, feedback, created_at`,
-    [track_id, challenge_id, nextAttempt, passed, feedback]
+    [req.userId, track_id, challenge_id, nextAttempt, passed, feedback]
   );
 
   res.status(201).json({ ok: true, data: result.rows[0] });

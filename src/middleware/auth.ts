@@ -1,12 +1,19 @@
 import { RequestHandler } from "express";
-import { deriveToken } from "../services/ai.js";
+import jwt from "jsonwebtoken";
+
+export interface JwtPayload {
+  userId: number;
+  username: string;
+  displayName: string;
+}
 
 export const authMiddleware: RequestHandler = (req, res, next) => {
-  const accessPassword = process.env["ACCESS_PASSWORD"];
-
-  // No ACCESS_PASSWORD set → dev mode, skip auth
-  if (!accessPassword) {
-    next();
+  const secret = process.env["JWT_SECRET"];
+  if (!secret) {
+    res.status(500).json({
+      ok: false,
+      error: { code: "SERVER_MISCONFIGURED", message: "JWT_SECRET is not configured" },
+    });
     return;
   }
 
@@ -14,19 +21,21 @@ export const authMiddleware: RequestHandler = (req, res, next) => {
   if (!authHeader?.startsWith("Bearer ")) {
     res.status(401).json({
       ok: false,
-      error: { code: "UNAUTHORIZED", message: "Authentication required" },
+      error: { code: "UNAUTHORIZED", message: "Autenticación requerida" },
     });
     return;
   }
 
   const token = authHeader.slice(7);
-  if (token !== deriveToken(accessPassword)) {
+  try {
+    const payload = jwt.verify(token, secret) as JwtPayload;
+    req.userId = payload.userId;
+    req.username = payload.username;
+    next();
+  } catch {
     res.status(401).json({
       ok: false,
-      error: { code: "INVALID_TOKEN", message: "Invalid token" },
+      error: { code: "INVALID_TOKEN", message: "Token inválido o expirado" },
     });
-    return;
   }
-
-  next();
 };

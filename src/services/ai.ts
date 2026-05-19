@@ -1,5 +1,3 @@
-import { createHash } from "crypto";
-
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
 const MODEL = "llama-3.3-70b-versatile";
 const TIMEOUT_MS = 30_000;
@@ -83,7 +81,3 @@ export async function callGroq(
   }
 }
 
-// Auth token derivation — used by both login route and auth middleware
-export function deriveToken(password: string): string {
-  return createHash("sha256").update(`floci-access:${password}`).digest("hex");
-}

@@ -26,20 +26,21 @@ function isPythonValidation(v: unknown): v is PythonValidation {
 }
 
 async function recordAttempt(
+  userId: number,
   trackId: string,
   challengeId: string,
   passed: boolean,
   feedback: unknown
 ): Promise<void> {
   const countResult = await pool.query<{ count: string }>(
-    "SELECT COUNT(*) AS count FROM challenge_attempts WHERE track_id = $1 AND challenge_id = $2",
-    [trackId, challengeId]
+    "SELECT COUNT(*) AS count FROM challenge_attempts WHERE user_id = $1 AND track_id = $2 AND challenge_id = $3",
+    [userId, trackId, challengeId]
   );
   const nextAttempt = parseInt(countResult.rows[0]?.count ?? "0", 10) + 1;
   await pool.query(
-    `INSERT INTO challenge_attempts (track_id, challenge_id, attempt_number, passed, feedback)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [trackId, challengeId, nextAttempt, passed, JSON.stringify(feedback)]
+    `INSERT INTO challenge_attempts (user_id, track_id, challenge_id, attempt_number, passed, feedback)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [userId, trackId, challengeId, nextAttempt, passed, JSON.stringify(feedback)]
   );
 }
 
@@ -88,7 +89,7 @@ router.post("/validate/python", async (req: Request, res: Response) => {
 
   // Record attempt — non-fatal if DB write fails
   try {
-    await recordAttempt(track_id, challenge_id, allPassed, { results });
+    await recordAttempt(req.userId, track_id, challenge_id, allPassed, { results });
   } catch (err) {
     console.error("Failed to record Python attempt:", err);
   }

@@ -1,17 +1,39 @@
 import { useState } from "react";
-import { Eye, EyeOff, Lock, Loader2 } from "lucide-react";
+import { Eye, EyeOff, User, Lock, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function LoginPage() {
   const { login, loginError, loginLoading } = useAuthStore();
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!password.trim() || loginLoading) return;
-    await login(password);
+    if (!username.trim() || !password || loginLoading) return;
+    await login(username.trim(), password);
   }
+
+  const inputStyle: React.CSSProperties = {
+    background: "var(--bg-surface)",
+    border: `1px solid ${loginError ? "var(--danger)" : "var(--border)"}`,
+    borderRadius: 8,
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "0 12px",
+    transition: "border-color 0.15s",
+  };
+
+  const fieldStyle: React.CSSProperties = {
+    flex: 1,
+    background: "none",
+    border: "none",
+    outline: "none",
+    fontSize: 14,
+    color: "var(--text-primary)",
+    padding: "12px 0",
+  };
 
   return (
     <div
@@ -50,46 +72,41 @@ export default function LoginPage() {
             <Lock className="size-5" style={{ color: "var(--accent)" }} />
           </div>
           <div className="text-center">
-            <h1
-              className="text-xl font-bold"
-              style={{ color: "var(--text-primary)" }}
-            >
+            <h1 className="text-xl font-bold" style={{ color: "var(--text-primary)" }}>
               Floci Trainer
             </h1>
             <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>
-              Ingresá la clave de acceso
+              Iniciá sesión para continuar
             </p>
           </div>
         </div>
 
         {/* Form */}
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-3">
-          <div
-            className="flex items-center gap-2"
-            style={{
-              background: "var(--bg-surface)",
-              border: `1px solid ${loginError ? "var(--danger)" : "var(--border)"}`,
-              borderRadius: 8,
-              padding: "0 12px",
-              transition: "border-color 0.15s",
-            }}
-          >
+          {/* Username */}
+          <div style={{ ...inputStyle, borderColor: loginError ? "var(--danger)" : "var(--border)" }}>
+            <User className="size-4 shrink-0" style={{ color: "var(--text-tertiary)" }} />
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Usuario"
+              autoFocus
+              autoComplete="username"
+              style={fieldStyle}
+            />
+          </div>
+
+          {/* Password */}
+          <div style={{ ...inputStyle, borderColor: loginError ? "var(--danger)" : "var(--border)" }}>
+            <Lock className="size-4 shrink-0" style={{ color: "var(--text-tertiary)" }} />
             <input
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Clave de acceso"
-              autoFocus
-              style={{
-                flex: 1,
-                background: "none",
-                border: "none",
-                outline: "none",
-                fontSize: 14,
-                color: "var(--text-primary)",
-                padding: "12px 0",
-                fontFamily: "var(--font-mono)",
-              }}
+              placeholder="Contraseña"
+              autoComplete="current-password"
+              style={{ ...fieldStyle, fontFamily: showPassword ? undefined : "var(--font-mono)" }}
             />
             <button
               type="button"
@@ -102,7 +119,7 @@ export default function LoginPage() {
                 padding: 0,
                 display: "flex",
               }}
-              aria-label={showPassword ? "Ocultar clave" : "Mostrar clave"}
+              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
             >
               {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
             </button>
@@ -116,15 +133,11 @@ export default function LoginPage() {
 
           <button
             type="submit"
-            disabled={!password.trim() || loginLoading}
+            disabled={!username.trim() || !password || loginLoading}
             className="btn btn-primary"
             style={{ marginTop: 4 }}
           >
-            {loginLoading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              "Entrar"
-            )}
+            {loginLoading ? <Loader2 className="size-4 animate-spin" /> : "Entrar"}
           </button>
         </form>
       </div>

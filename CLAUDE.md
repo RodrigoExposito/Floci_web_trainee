@@ -67,14 +67,44 @@ floci-service/
 ## Database Schema
 
 ```sql
-progress          (id, track_id, module_id, lesson_id, status, completed_at)
-                  UNIQUE(track_id, module_id, lesson_id)
+users             (id SERIAL PK, username TEXT UNIQUE, password_hash TEXT, display_name TEXT, created_at)
+                  -- passwords hashed with bcrypt (10 rounds)
 
-challenge_attempts (id, track_id, challenge_id, attempt_number, passed, feedback, created_at)
+progress          (id, user_id FK→users.id, track_id, module_id, lesson_id, status, completed_at)
+                  UNIQUE(user_id, track_id, module_id, lesson_id)
+
+challenge_attempts (id, user_id FK→users.id, track_id, challenge_id, attempt_number, passed, feedback, created_at)
 
 settings          (key PK, value)
 
-weak_areas        (id, track_id, module_id, topic, miss_count)
+weak_areas        (id, user_id FK→users.id, track_id, module_id, topic, miss_count)
+```
+
+## Multi-User System (W6)
+
+~9 team users, no public registration. Users are created via seed script.
+
+### Creating users
+
+```bash
+pnpm run seed
+```
+
+Idempotent — safe to run multiple times. Users in `src/db/seed-users.ts`.
+
+### Auth flow
+
+1. `POST /api/auth/login` with `{ username, password }` → verifies bcrypt hash → returns JWT
+2. JWT payload: `{ userId, username, displayName }`, signed with `JWT_SECRET`, expires in 30 days
+3. All protected routes expect `Authorization: Bearer <token>` header
+4. `authMiddleware` verifies the JWT, sets `req.userId` and `req.username`
+5. All data routes (progress, weak-areas, attempts) filter and write by `req.userId`
+6. Frontend stores token + username + displayName in `sessionStorage` (cleared on tab close)
+
+### Login response
+
+```json
+{ "ok": true, "data": { "token": "...", "username": "mate", "displayName": "Mate" } }
 ```
 
 ---
@@ -123,13 +153,13 @@ All responses follow `{ ok: true, data: ... }` or `{ ok: false, error: { code, m
 
 ## Environment Variables
 
-| Variable       | Description                                   |
-|----------------|-----------------------------------------------|
+| Variable            | Description                                                                     |
+|---------------------|---------------------------------------------------------------------------------|
 | `DATABASE_URL`      | PostgreSQL connection string (required)                                         |
 | `PORT`              | Listening port (default: 3000)                                                  |
 | `FLOCI_ENDPOINT`    | Floci base URL (default: `http://localhost:4566`)                                |
 | `GROQ_API_KEY`      | Groq API key for the AI assistant — `gsk_...` (required for AI to work)         |
-| `ACCESS_PASSWORD`   | Single-password access gate; if unset, auth is skipped (dev mode)               |
+| `JWT_SECRET`        | Secret for signing/verifying JWTs — generate with `openssl rand -hex 32`        |
 | `ALLOWED_ORIGINS`   | Comma-separated CORS allowlist; if unset, all origins allowed (dev mode)        |
 
 ---
@@ -149,5 +179,6 @@ All responses follow `{ ok: true, data: ... }` or `{ ok: false, error: { code, m
 - [x] **W1 — Backend Foundation:** Express + TypeScript, PostgreSQL schema, 8 REST endpoints, Docker Compose for local dev, Railway deploy via Dockerfile (`railway.json` + `Dockerfile`)
 - [x] **W2 — Floci + AWS Validation:** Floci service (Railway), executeAwsCommand, evaluateExpect, cleanupResource, `/api/floci/status`, `/api/floci/cleanup`, `/api/validate/aws`, `/api/validate/aws/single`, AWS CLI v2 in Dockerfile
 - [x] **W3 — Python Challenge Execution:** `runPython()` service, `/api/validate/python`, attempt recording, timeout via SIGKILL, python3 in Dockerfile
-- [ ] **W4 — AI Integration:** Proxy Groq API calls (hints, explanations, feedback)
-- [ ] **W5 — Frontend:** React SPA served from the same Express app or Vite + CDN
+- [x] **W4 — AI Integration:** Proxy Groq API calls (hints, explanations, feedback)
+- [x] **W5 — Frontend:** React SPA served from Express; single-password auth gate, rate limiting, CORS, theme, login/logout UI, reset progress
+- [x] **W6 — Multi-user:** `users` table, bcrypt passwords, JWT auth, per-user progress isolation, seed script for 9 team users, username+displayName in header

@@ -57,7 +57,7 @@ export function Header() {
   const crumbs = useBreadcrumbs();
   const { theme, toggle: toggleTheme } = useThemeStore();
   const { open: aiOpen, toggle: toggleAi } = useAiStore();
-  const { logout } = useAuthStore();
+  const { logout, displayName } = useAuthStore();
 
   return (
     <header
@@ -115,6 +115,16 @@ export function Header() {
         <FlociStatus />
 
         <div style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
+
+        {displayName && (
+          <span
+            className="text-xs font-medium px-2"
+            style={{ color: "var(--text-secondary)" }}
+            title={displayName}
+          >
+            {displayName}
+          </span>
+        )}
 
         <button
           onClick={logout}

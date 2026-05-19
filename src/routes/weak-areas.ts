@@ -13,13 +13,16 @@ router.get("/weak-areas", async (req: Request, res: Response) => {
   }
 
   const result = await pool.query<WeakArea>(
-    "SELECT id, track_id, module_id, topic, miss_count FROM weak_areas WHERE track_id = $1 ORDER BY miss_count DESC",
-    [trackId]
+    `SELECT id, track_id, module_id, topic, miss_count
+     FROM weak_areas
+     WHERE user_id = $1 AND track_id = $2
+     ORDER BY miss_count DESC`,
+    [req.userId, trackId]
   );
   res.json({ ok: true, data: result.rows });
 });
 
-// POST /api/weak-areas — upsert (topic per track+module is not unique; uses SELECT+UPDATE/INSERT like desktop)
+// POST /api/weak-areas — upsert (topic per user+track+module)
 router.post("/weak-areas", async (req: Request, res: Response) => {
   const { track_id, module_id, topic, miss_count } = req.body as Record<string, unknown>;
 
@@ -40,21 +43,25 @@ router.post("/weak-areas", async (req: Request, res: Response) => {
   }
 
   const existing = await pool.query<WeakArea>(
-    "SELECT id FROM weak_areas WHERE track_id = $1 AND module_id = $2 AND topic = $3",
-    [track_id, module_id, topic]
+    "SELECT id FROM weak_areas WHERE user_id = $1 AND track_id = $2 AND module_id = $3 AND topic = $4",
+    [req.userId, track_id, module_id, topic]
   );
 
   let row: WeakArea;
   if ((existing.rowCount ?? 0) > 0) {
     const updated = await pool.query<WeakArea>(
-      "UPDATE weak_areas SET miss_count = $1 WHERE id = $2 RETURNING id, track_id, module_id, topic, miss_count",
+      `UPDATE weak_areas SET miss_count = $1
+       WHERE id = $2
+       RETURNING id, track_id, module_id, topic, miss_count`,
       [miss_count, existing.rows[0]?.id]
     );
     row = updated.rows[0] as WeakArea;
   } else {
     const inserted = await pool.query<WeakArea>(
-      "INSERT INTO weak_areas (track_id, module_id, topic, miss_count) VALUES ($1, $2, $3, $4) RETURNING id, track_id, module_id, topic, miss_count",
-      [track_id, module_id, topic, miss_count]
+      `INSERT INTO weak_areas (user_id, track_id, module_id, topic, miss_count)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, track_id, module_id, topic, miss_count`,
+      [req.userId, track_id, module_id, topic, miss_count]
     );
     row = inserted.rows[0] as WeakArea;
   }
