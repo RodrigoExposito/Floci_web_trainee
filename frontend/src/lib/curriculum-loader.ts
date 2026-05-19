@@ -7,11 +7,31 @@ const curriculumGlob = import.meta.glob<Curriculum>(
   { eager: true, import: "default" }
 );
 
+// Build a set of "trackId:moduleId" that have actual content files on disk.
+// This drives the content filter in loadCurriculum — modules without files are
+// hidden automatically, and reappear the moment content is added.
+const _lessonKeys = Object.keys(
+  import.meta.glob("../content/tracks/*/modules/*/lessons/*.md")
+);
+const _challengeKeys = Object.keys(
+  import.meta.glob("../content/tracks/*/modules/*/challenges/*.json")
+);
+const _moduleContentPattern = /tracks\/([^/]+)\/modules\/([^/]+)\//;
+
+const modulesWithContent = new Set<string>();
+for (const key of [..._lessonKeys, ..._challengeKeys]) {
+  const m = _moduleContentPattern.exec(key);
+  if (m) modulesWithContent.add(`${m[1]}:${m[2]}`);
+}
+
 export function loadCurriculum(trackId: string): Curriculum {
   const key = `../content/tracks/${trackId}/curriculum.json`;
   const data = curriculumGlob[key];
   if (!data) return { modules: [] };
-  return data;
+  const modules = data.modules.filter((m) =>
+    modulesWithContent.has(`${trackId}:${m.id}`)
+  );
+  return { ...data, modules };
 }
 
 export function loadModule(trackId: string, moduleId: string): Module | undefined {

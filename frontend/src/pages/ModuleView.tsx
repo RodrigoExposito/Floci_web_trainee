@@ -39,11 +39,8 @@ export default function ModuleView() {
   const meta = getModuleMeta(trackId, moduleId);
 
   if (!mod || !meta) {
-    return (
-      <div className="text-center mt-20 text-sm" style={{ color: "var(--text-secondary)" }}>
-        Módulo no encontrado: {moduleId}
-      </div>
-    );
+    navigate(`/${trackId}`, { replace: true });
+    return null;
   }
 
   return (
