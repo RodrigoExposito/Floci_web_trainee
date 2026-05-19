@@ -125,9 +125,12 @@ All responses follow `{ ok: true, data: ... }` or `{ ok: false, error: { code, m
 
 | Variable       | Description                                   |
 |----------------|-----------------------------------------------|
-| `DATABASE_URL`    | PostgreSQL connection string (required)                         |
-| `PORT`            | Listening port (default: 3000)                                  |
-| `FLOCI_ENDPOINT`  | Floci base URL (default: `http://localhost:4566`)               |
+| `DATABASE_URL`      | PostgreSQL connection string (required)                                         |
+| `PORT`              | Listening port (default: 3000)                                                  |
+| `FLOCI_ENDPOINT`    | Floci base URL (default: `http://localhost:4566`)                                |
+| `GROQ_API_KEY`      | Groq API key for the AI assistant — `gsk_...` (required for AI to work)         |
+| `ACCESS_PASSWORD`   | Single-password access gate; if unset, auth is skipped (dev mode)               |
+| `ALLOWED_ORIGINS`   | Comma-separated CORS allowlist; if unset, all origins allowed (dev mode)        |
 
 ---
 

@@ -102,8 +102,8 @@ export async function updateWeakArea(
 
 export async function checkFlociStatus(): Promise<boolean> {
   try {
-    const data = await call<{ online: boolean }>("GET", "/api/floci/status");
-    return data.online;
+    const data = await call<{ running: boolean }>("GET", "/api/floci/status");
+    return data.running;
   } catch {
     return false;
   }
