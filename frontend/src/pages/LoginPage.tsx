@@ -8,10 +8,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function doLogin() {
     if (!username.trim() || !password || loginLoading) return;
     await login(username.trim(), password);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    await doLogin();
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") void doLogin();
   }
 
   const inputStyle: React.CSSProperties = {
@@ -93,6 +101,7 @@ export default function LoginPage() {
               placeholder="Usuario"
               autoFocus
               autoComplete="username"
+              onKeyDown={handleKeyDown}
               style={fieldStyle}
             />
           </div>
@@ -106,6 +115,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Contraseña"
               autoComplete="current-password"
+              onKeyDown={handleKeyDown}
               style={{ ...fieldStyle, fontFamily: showPassword ? undefined : "var(--font-mono)" }}
             />
             <button
