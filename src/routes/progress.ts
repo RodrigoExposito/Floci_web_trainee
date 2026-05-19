@@ -53,4 +53,41 @@ router.post("/progress", async (req: Request, res: Response) => {
   res.status(201).json({ ok: true, data: result.rows[0] });
 });
 
+// DELETE /api/progress?track=:trackId&module=:moduleId — reset one module
+router.delete("/progress", async (req: Request, res: Response) => {
+  const trackId = req.query["track"];
+  const moduleId = req.query["module"];
+
+  if (typeof trackId !== "string" || trackId.trim() === "" ||
+      typeof moduleId !== "string" || moduleId.trim() === "") {
+    res.status(400).json({
+      ok: false,
+      error: { code: "MISSING_PARAMS", message: "Query params 'track' and 'module' are required" },
+    });
+    return;
+  }
+
+  await pool.query(
+    "DELETE FROM progress WHERE track_id = $1 AND module_id = $2",
+    [trackId, moduleId]
+  );
+  res.json({ ok: true });
+});
+
+// DELETE /api/progress/all?track=:trackId — reset all progress for a track
+router.delete("/progress/all", async (req: Request, res: Response) => {
+  const trackId = req.query["track"];
+
+  if (typeof trackId !== "string" || trackId.trim() === "") {
+    res.status(400).json({
+      ok: false,
+      error: { code: "MISSING_TRACK", message: "Query param 'track' is required" },
+    });
+    return;
+  }
+
+  await pool.query("DELETE FROM progress WHERE track_id = $1", [trackId]);
+  res.json({ ok: true });
+});
+
 export default router;

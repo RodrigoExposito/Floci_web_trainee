@@ -1,8 +1,7 @@
 import { create } from "zustand";
-import { updateProgress } from "@/lib/api";
+import { updateProgress, resetModuleProgress, resetAllProgress } from "@/lib/api";
 import type { ProgressStatus, ProgressRecord } from "@/lib/types";
 import { getModuleMeta } from "@/lib/module-registry";
-import { loadCurriculum } from "@/lib/curriculum-loader";
 
 type LessonMap = Record<string, ProgressStatus>;
 type ProgressMap = Record<string, LessonMap>;
@@ -16,21 +15,19 @@ interface ProgressStore {
   getModuleStatus: (moduleId: string) => ProgressStatus;
   markCompleted: (moduleId: string, lessonId: string) => Promise<void>;
   completedCount: (moduleId: string) => number;
+  clearModuleProgress: (moduleId: string) => Promise<void>;
+  clearAllProgress: () => Promise<void>;
 }
 
+// Modules are never locked between each other — any module is accessible from the start.
+// Status is "completed" only when all items inside are done; otherwise "active".
 export function computeModuleStatus(
   trackId: string,
   moduleId: string,
   progress: ProgressMap
 ): ProgressStatus {
   const meta = getModuleMeta(trackId, moduleId);
-  if (!meta) return "locked";
-
-  for (const prereqId of meta.prereqs) {
-    if (computeModuleStatus(trackId, prereqId, progress) !== "completed") {
-      return "locked";
-    }
-  }
+  if (!meta) return "active";
 
   const allItems = [...meta.lessons, ...meta.challenges];
   if (allItems.length === 0) return "active";
@@ -40,24 +37,8 @@ export function computeModuleStatus(
   return allDone ? "completed" : "active";
 }
 
-function buildInitialProgress(trackId: string): ProgressMap {
-  const { modules } = loadCurriculum(trackId);
-  const map: ProgressMap = {};
-  const firstModule = modules[0];
-  if (firstModule) {
-    const meta = getModuleMeta(trackId, firstModule.id);
-    if (meta) {
-      map[firstModule.id] = {};
-      for (const id of [...meta.lessons, ...meta.challenges]) {
-        map[firstModule.id][id] = "active";
-      }
-    }
-  }
-  return map;
-}
-
 export const useProgressStore = create<ProgressStore>((set, get) => ({
-  lessonProgress: buildInitialProgress("aws"),
+  lessonProgress: {},
   currentTrackId: "aws",
   hydrated: false,
 
@@ -66,10 +47,6 @@ export const useProgressStore = create<ProgressStore>((set, get) => ({
     for (const r of records) {
       if (!map[r.module_id]) map[r.module_id] = {};
       map[r.module_id][r.lesson_id] = r.status as ProgressStatus;
-    }
-    if (Object.keys(map).length === 0) {
-      const initial = buildInitialProgress(trackId);
-      Object.assign(map, initial);
     }
     set({ lessonProgress: map, currentTrackId: trackId, hydrated: true });
   },
@@ -111,5 +88,20 @@ export const useProgressStore = create<ProgressStore>((set, get) => ({
     } catch (err) {
       console.error("Failed to persist progress:", err);
     }
+  },
+
+  async clearModuleProgress(moduleId) {
+    const trackId = get().currentTrackId;
+    await resetModuleProgress(trackId, moduleId);
+    set((state) => {
+      const { [moduleId]: _removed, ...rest } = state.lessonProgress;
+      return { lessonProgress: rest };
+    });
+  },
+
+  async clearAllProgress() {
+    const trackId = get().currentTrackId;
+    await resetAllProgress(trackId);
+    set({ lessonProgress: {} });
   },
 }));

@@ -1,10 +1,11 @@
 import { Link, useParams, useLocation } from "react-router-dom";
-import { ChevronRight, Sun, Moon, Sparkles } from "lucide-react";
+import { ChevronRight, Sun, Moon, Sparkles, LogOut } from "lucide-react";
 import { FlociStatus } from "@/components/status/FlociStatus";
 import { loadModule } from "@/lib/curriculum-loader";
 import { useThemeStore } from "@/stores/theme-store";
 import { useAiStore } from "@/stores/ai-store";
 import { useTrackStore } from "@/stores/track-store";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface Crumb {
   label: string;
@@ -56,6 +57,7 @@ export function Header() {
   const crumbs = useBreadcrumbs();
   const { theme, toggle: toggleTheme } = useThemeStore();
   const { open: aiOpen, toggle: toggleAi } = useAiStore();
+  const { logout } = useAuthStore();
 
   return (
     <header
@@ -91,7 +93,7 @@ export function Header() {
           className="btn btn-icon btn-ghost"
           aria-label="Toggle AI assistant"
           aria-pressed={aiOpen}
-          title="Asistente IA (⌘I)"
+          title="Asistente IA"
           style={{ color: aiOpen ? "var(--accent)" : "var(--text-secondary)" }}
         >
           <Sparkles className="size-3.5" />
@@ -101,7 +103,7 @@ export function Header() {
           onClick={toggleTheme}
           className="btn btn-icon btn-ghost"
           aria-label="Toggle theme"
-          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          title={`Cambiar a ${theme === "dark" ? "claro" : "oscuro"}`}
         >
           {theme === "dark" ? (
             <Sun className="size-3.5" style={{ color: "var(--text-secondary)" }} />
@@ -111,6 +113,20 @@ export function Header() {
         </button>
 
         <FlociStatus />
+
+        <div style={{ width: 1, height: 16, background: "var(--border)", margin: "0 2px" }} />
+
+        <button
+          onClick={logout}
+          className="btn btn-icon btn-ghost"
+          aria-label="Cerrar sesión"
+          title="Cerrar sesión"
+          style={{ color: "var(--text-tertiary)" }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--danger)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--text-tertiary)"; }}
+        >
+          <LogOut className="size-3.5" />
+        </button>
       </div>
     </header>
   );

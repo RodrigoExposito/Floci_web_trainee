@@ -66,6 +66,14 @@ export async function updateProgress(
   });
 }
 
+export async function resetModuleProgress(trackId: string, moduleId: string): Promise<void> {
+  await call<void>("DELETE", `/api/progress?track=${encodeURIComponent(trackId)}&module=${encodeURIComponent(moduleId)}`);
+}
+
+export async function resetAllProgress(trackId: string): Promise<void> {
+  await call<void>("DELETE", `/api/progress/all?track=${encodeURIComponent(trackId)}`);
+}
+
 // ── Attempts ──────────────────────────────────────────────────────────────────
 
 export async function recordAttempt(

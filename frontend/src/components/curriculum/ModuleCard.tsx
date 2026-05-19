@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Lock, CheckCircle, Circle } from "lucide-react";
+import { CheckCircle, Circle } from "lucide-react";
 import type { Module, ProgressStatus } from "@/lib/types";
 import { useProgressStore } from "@/stores/progress-store";
 import { getModuleMeta } from "@/lib/module-registry";
@@ -12,9 +12,7 @@ interface Props {
 function StatusIcon({ status }: { status: ProgressStatus }) {
   if (status === "completed")
     return <CheckCircle className="size-3.5" style={{ color: "var(--accent)" }} />;
-  if (status === "active")
-    return <Circle className="size-3.5" style={{ color: "var(--accent)", opacity: 0.6 }} />;
-  return <Lock className="size-3.5" style={{ color: "var(--text-tertiary)" }} />;
+  return <Circle className="size-3.5" style={{ color: "var(--accent)", opacity: 0.6 }} />;
 }
 
 export function ModuleCard({ module, trackId }: Props) {
@@ -27,24 +25,16 @@ export function ModuleCard({ module, trackId }: Props) {
   const total = meta ? meta.lessons.length + meta.challenges.length : 0;
   const done = completedCount(module.id);
   const order = String(module.order).padStart(2, "0");
-  const isLocked = status === "locked";
-
-  function handleClick() {
-    if (!isLocked) navigate(`/${trackId}/module/${module.id}`);
-  }
 
   return (
     <button
-      onClick={handleClick}
-      disabled={isLocked}
+      onClick={() => navigate(`/${trackId}/module/${module.id}`)}
       className="group flex flex-col gap-3 rounded-[10px] p-4 text-left transition-all"
       style={{
         background: "var(--bg-elevated)",
         border: "1px solid var(--border)",
-        opacity: isLocked ? 0.45 : 1,
-        cursor: isLocked ? "not-allowed" : "pointer",
       }}
-      onMouseEnter={(e) => { if (!isLocked) e.currentTarget.style.borderColor = "var(--border-focus)"; }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-focus)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
     >
       <div className="flex items-center justify-between gap-2">
@@ -69,23 +59,18 @@ export function ModuleCard({ module, trackId }: Props) {
       </div>
 
       <div className="min-w-0">
-        <p
-          className="font-medium text-sm leading-tight"
-          style={{ color: isLocked ? "var(--text-secondary)" : "var(--text-primary)" }}
-        >
+        <p className="font-medium text-sm leading-tight" style={{ color: "var(--text-primary)" }}>
           {module.title}
         </p>
-        {!isLocked && (
-          <p
-            className="mt-1 text-xs line-clamp-2 leading-relaxed"
-            style={{ color: "var(--text-tertiary)" }}
-          >
-            {module.description}
-          </p>
-        )}
+        <p
+          className="mt-1 text-xs line-clamp-2 leading-relaxed"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          {module.description}
+        </p>
       </div>
 
-      {total > 0 && !isLocked && (
+      {total > 0 && (
         <div className="space-y-1">
           <div
             className="h-1 w-full overflow-hidden rounded-full"
