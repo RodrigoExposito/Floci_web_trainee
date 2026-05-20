@@ -29,5 +29,8 @@
         "criterion": "La función usa el runtime Python 3.12"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "lambda-function", "name": "nave-health-check" }
+  ]
 }

@@ -20,7 +20,7 @@ WORKDIR /app
 
 # Install AWS CLI v2 + python3
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      curl unzip ca-certificates python3 \
+      curl unzip ca-certificates python3 make g++ \
     && curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip \
     && unzip /tmp/awscliv2.zip -d /tmp \
     && /tmp/aws/install \
@@ -29,9 +29,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN npm install -g pnpm@9
 
-# Install backend deps and build
+# Install backend deps and build (node-pty needs native compilation)
 COPY package.json pnpm-lock.yaml .npmrc ./
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --frozen-lockfile
 COPY src/ ./src/
 COPY tsconfig.json ./
 RUN pnpm run build

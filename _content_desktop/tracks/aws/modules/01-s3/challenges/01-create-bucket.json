@@ -29,5 +29,8 @@
         "criterion": "Versioning está habilitado"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "s3-bucket", "name": "nave-transactions" }
+  ]
 }

@@ -27,5 +27,8 @@
         "criterion": "La pre-signed URL contiene firma válida"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "s3-bucket", "name": "nave-transactions" }
+  ]
 }

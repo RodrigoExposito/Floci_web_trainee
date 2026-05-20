@@ -30,5 +30,8 @@
         "criterion": "Se pueden consultar los atributos de la cola"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "sqs-queue", "name": "nave-fraud-queue" }
+  ]
 }

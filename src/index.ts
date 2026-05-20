@@ -1,4 +1,5 @@
 import "dotenv/config";
+import { createServer } from "http";
 import express from "express";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
@@ -22,6 +23,7 @@ import flociRouter from "./routes/floci.js";
 import validateRouter from "./routes/validate.js";
 import validatePythonRouter from "./routes/validate-python.js";
 import aiRouter from "./routes/ai.js";
+import { attachTerminalWs } from "./routes/terminal.js";
 
 const app = express();
 const PORT = process.env["PORT"] ?? 3000;
@@ -114,7 +116,11 @@ app.use(errorHandler);
 async function start(): Promise<void> {
   await checkConnection();  // retries up to 5x with 2s delay
   await runMigration();     // idempotent — safe to run on every boot
-  app.listen(PORT, () => {
+
+  const server = createServer(app);
+  attachTerminalWs(server); // attach WebSocket upgrade handler
+
+  server.listen(PORT, () => {
     console.log(`Floci Trainer Web API running on port ${PORT}`);
   });
 }

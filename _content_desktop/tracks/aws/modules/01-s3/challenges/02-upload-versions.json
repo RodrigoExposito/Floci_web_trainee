@@ -30,5 +30,8 @@
         "criterion": "Existen múltiples versiones del objeto"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "s3-bucket", "name": "nave-transactions" }
+  ]
 }

@@ -33,5 +33,8 @@
         "criterion": "Se puede hacer Scan de la tabla"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "dynamodb-table", "name": "nave-transactions" }
+  ]
 }

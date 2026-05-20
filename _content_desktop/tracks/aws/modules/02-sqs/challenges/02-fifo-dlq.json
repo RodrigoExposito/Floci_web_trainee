@@ -34,5 +34,9 @@
         "criterion": "La redrive policy está configurada en la cola principal"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "sqs-queue", "name": "nave-authorization.fifo" },
+    { "type": "sqs-queue", "name": "nave-authorization-dlq.fifo" }
+  ]
 }

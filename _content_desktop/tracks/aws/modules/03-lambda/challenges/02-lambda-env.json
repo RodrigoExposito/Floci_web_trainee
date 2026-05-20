@@ -28,5 +28,8 @@
         "criterion": "La función tiene variables de entorno configuradas"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "lambda-function", "name": "nave-config-demo" }
+  ]
 }

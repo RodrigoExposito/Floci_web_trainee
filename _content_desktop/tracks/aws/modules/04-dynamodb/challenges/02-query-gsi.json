@@ -28,5 +28,8 @@
         "criterion": "El query al GSI retorna transacciones flagged"
       }
     ]
-  }
+  },
+  "cleanup": [
+    { "type": "dynamodb-table", "name": "nave-transactions-indexed" }
+  ]
 }

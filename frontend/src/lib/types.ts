@@ -43,6 +43,17 @@ export interface ValidationCommand {
   criterion: string;
 }
 
+export type CleanupResourceType =
+  | "s3-bucket"
+  | "sqs-queue"
+  | "dynamodb-table"
+  | "lambda-function";
+
+export interface CleanupResource {
+  type: CleanupResourceType;
+  name: string;
+}
+
 export interface Challenge {
   id: string;
   title: string;
@@ -56,6 +67,7 @@ export interface Challenge {
   validation: {
     commands: ValidationCommand[];
   };
+  cleanup?: CleanupResource[]; // AWS resources to delete after challenge
 }
 
 // ── Progress ─────────────────────────────────────────────────────────────────

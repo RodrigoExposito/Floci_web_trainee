@@ -178,6 +178,26 @@ export async function runPythonValidation(
   };
 }
 
+// ── Cleanup ───────────────────────────────────────────────────────────────────
+
+export interface CleanupResource {
+  type: string;
+  name: string;
+}
+
+export async function cleanupChallenge(
+  trackId: string,
+  challengeId: string,
+  resources: CleanupResource[]
+): Promise<void> {
+  if (resources.length === 0) return;
+  await call<unknown>("POST", "/api/floci/cleanup", {
+    track_id: trackId,
+    challenge_id: challengeId,
+    resources,
+  });
+}
+
 // ── AI ────────────────────────────────────────────────────────────────────────
 
 export async function callAi(
