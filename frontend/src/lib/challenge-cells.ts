@@ -6,28 +6,22 @@ export function transformChallengeToCells(challenge: Challenge): ChallengeCell[]
 
   cells.push({ kind: "markdown", body: challenge.scenario });
 
+  // All instructions as pure markdown — never paired 1:1 with validation cmds
   challenge.instructions.forEach((instruction, i) => {
     cells.push({
       kind: "markdown",
       body: `**Paso ${i + 1}** — ${instruction}`,
     });
-
-    if (i < cmds.length) {
-      cells.push({
-        kind: "code",
-        body: cmds[i].cmd ?? "",
-        validationIndex: i,
-      });
-    }
   });
 
-  for (let i = challenge.instructions.length; i < cmds.length; i++) {
+  // All validation commands as executable cells, after instructions
+  cmds.forEach((cmd, i) => {
     cells.push({
       kind: "code",
-      body: cmds[i].cmd ?? "",
+      body: cmd.cmd ?? "",
       validationIndex: i,
     });
-  }
+  });
 
   if (challenge.hints.length > 0) {
     cells.push({ kind: "hints", body: "", hints: challenge.hints });
